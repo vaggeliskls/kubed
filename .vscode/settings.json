@@ -1,0 +1,15 @@
+{
+  "editor.tabSize": 2,
+  "editor.rulers": [100],
+  "editor.formatOnSave": true,
+  "typescript.preferences.quoteStyle": "double",
+  "typescript.preferences.importModuleSpecifier": "relative",
+
+  "explorer.fileNesting.enabled": true,
+  "explorer.fileNesting.expand": false,
+  "explorer.fileNesting.patterns": {
+    ".gitignore": ".gitattributes, .gitmodules, .gitmessage, .mailmap, .git-blame*, .dockerignore",
+    "package.json": ".browserslist*, .codecov, .commitlint*, .editorconfig, .eslint*, .github*, .huskyrc*, .jslint*, .lintstagedrc*, .node-version, .npm*, .nvmrc, .prettier*, prettier*, .releaserc*, .vscode*, commitlint*, cypress.json, jest.*, jsconfig.*, lint-staged*, nest-cli.*, package-lock.json, stylelint*, tsdoc.*, tslint*, webpack.config.*, workspace.json, yarn*, tailwind.config*",
+    "readme.*": "authors, backers.md, changelog*, citation*, code_of_conduct.md, codeowners, contributing.md, contributors, copying, credits, governance.md, history.md, license*, maintainers, readme*, security.md, sponsors.md"
+  }
+}
