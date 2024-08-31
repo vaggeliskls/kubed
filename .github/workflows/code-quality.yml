@@ -1,0 +1,56 @@
+# CODE QUALITY
+# ---------------------------------------------
+name: Code Quality
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+    paths-ignore:
+      - "**.md"
+      - "**.yml"
+  workflow_call:
+
+concurrency:
+  group: cq.${{ github.ref || github.run_id }}.${{ github.event_name }}
+  cancel-in-progress: true
+
+jobs:
+  linting:
+    name: Linting Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout current repository
+        uses: actions/checkout@v4
+
+      - name: Checkout remote composite actions
+        uses: ./.github/workflows/composite-actions
+        with:
+          ACTION_APP_ID: ${{ secrets.ACTION_APP_ID }}
+          ACTION_APP_KEY: ${{ secrets.ACTION_APP_KEY }}
+
+      - name: 🚧 Run linting script
+        uses: ./.github/actions/commands/nodejs/exec-docker
+        with:
+          NODE_VERSION: 18.19.1
+          COMMAND: npm run lint:ci
+
+  format:
+    name: Format Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout current repository
+        uses: actions/checkout@v4
+
+      - name: Checkout remote composite actions
+        uses: ./.github/workflows/composite-actions
+        with:
+          ACTION_APP_ID: ${{ secrets.ACTION_APP_ID }}
+          ACTION_APP_KEY: ${{ secrets.ACTION_APP_KEY }}
+
+      - name: 🚧 Run format check script
+        uses: ./.github/actions/commands/nodejs/exec-docker
+        with:
+          NODE_VERSION: 18.19.1
+          COMMAND: npm run format:check:ci

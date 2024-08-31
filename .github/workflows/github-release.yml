@@ -1,0 +1,68 @@
+name: K8s Deployer Release
+
+on:
+  release:
+    types:
+      - created
+
+concurrency:
+  group: kubed-packages.${{ github.ref_name }}
+  cancel-in-progress: true
+
+env:
+  REPOSITORY_NAME: ${{ github.repository }}
+  TAG_NAME: ${{ github.ref_name }}
+jobs:
+  generate-packages:
+    name: Packages
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        version:
+          [
+            "package:linux:amd64",
+            "package:linux:arm64",
+            "package:windows:amd64",
+            "package:darwin:amd64",
+            "package:darwin:arm64",
+            "package:linux:amd64:offline",
+            "package:linux:arm64:offline",
+            "package:windows:amd64:offline",
+            "package:darwin:amd64:offline",
+            "package:darwin:arm64:offline",
+          ]
+    steps:
+      - name: Checkout current repository
+        uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18.19.1
+
+      - name: Install Libraries
+        run: |
+          npm ci
+        shell: bash
+
+      - name: 📦 Online/Offline Package generation
+        env:
+          APP_VERSION: ${{ env.TAG_NAME }}
+          APP_NAME: kubed
+        run: |
+          echo "APP_NAME=$APP_NAME" > .application
+          echo "APP_VERSION=$APP_VERSION" >> .application
+          npm run ${{ matrix.version }}
+        shell: bash
+
+      - name: 🔼 Upload packages on latest Github Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          packages=(./bin/*)
+          gh release upload ${{ env.TAG_NAME }} ${packages[@]} --clobber
+        shell: bash
+
+      - name: 🧼 Clean up
+        run: |
+          rm -rf assets node_modules bin dist s3-upload-temp
+        shell: bash
