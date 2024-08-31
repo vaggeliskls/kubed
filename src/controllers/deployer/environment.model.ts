@@ -1,0 +1,127 @@
+export interface DockerImageDetails {
+  registry: string | undefined;
+  repository: string;
+  tag: string | undefined;
+  image: string;
+}
+
+export interface IDict {
+  [key: string]: string;
+}
+
+export class SettingFile {
+  ENVIRONMENT = "";
+  DEFAULT_TEMPLATE_PATH?: string = "./assets/charts/values";
+  EXLUDE_ENVIRONMENTS: string[] = ["default.json"];
+  PACKAGES = {
+    KUBECTL: "v1.29.1",
+    HELM: "v3.14.0",
+    SKOPEO: "v1.14.0",
+    K3D: "v5.6.0",
+  };
+  OVERRIDE = {};
+  EXCLUDE = [];
+}
+
+export class Chart {
+  apiVersion = "v2";
+  name = "chart-name";
+  description = "The generic single chart application";
+  type = "application";
+  version = "0.1.0";
+  appVersion = "0.16.0";
+  dependencies: {
+    name: string;
+    version?: string;
+    repository?: string;
+    condition?: string;
+    alias?: string;
+  }[] = [];
+}
+
+export class ConfigMap {
+  apiVersion = "v1";
+  kind = "ConfigMap";
+  metadata = {
+    name: "kubed-global-config",
+    namespace: "kubed",
+  };
+  data: IDict = {};
+}
+
+export class Secret {
+  apiVersion = "v1";
+  kind = "Secret";
+  metadata = {
+    name: "kubed-global-secret",
+    namespace: "kubed",
+  };
+  data: IDict = {};
+}
+
+export interface IConfigMap {
+  name?: string;
+  data: IData[];
+}
+
+export interface ISecret {
+  name?: string;
+  data: IData[];
+}
+
+export interface IChartsData {
+  name: string;
+  path: string;
+  version?: string;
+  group: string;
+  template?: string;
+  wait?: boolean;
+  waitForJobs?: boolean;
+  timeout?: string;
+  completed?: boolean;
+  priority?: number;
+  namespace?: string;
+  debug?: boolean;
+  templateContext?: any;
+  images?: string[];
+  remote: boolean;
+  repository?: string;
+  repositoryName?: string;
+  type?: "oci" | "http" | "local";
+}
+
+export interface ICharts {
+  priority: {
+    utils: number;
+    service: number;
+    component: number;
+    worker: number;
+  };
+  data: IChartsData[];
+}
+
+export interface IData {
+  key: string;
+  value: string;
+  type?: DataTypeEnum;
+  message?: string;
+  env?: string;
+  length?: number;
+  sensitive: boolean;
+  display?: boolean;
+  lock?: boolean;
+}
+
+export enum DataTypeEnum {
+  Random = "random",
+  Prompt = "prompt",
+}
+
+export interface IDeployer {
+  namespace: string;
+  parent: string;
+  Settings: IData[];
+  ConfigMap: IConfigMap;
+  Secret: ISecret;
+  Charts: ICharts;
+}
