@@ -1,0 +1,1 @@
+ kubectl delete pod --grace-period=0 --force --namespace $1 $2
