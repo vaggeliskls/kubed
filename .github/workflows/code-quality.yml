@@ -1,20 +1,17 @@
-# CODE QUALITY
-# ---------------------------------------------
 name: Code Quality
 
 on:
   pull_request:
     branches:
       - main
-      - develop
-    paths-ignore:
-      - "**.md"
-      - "**.yml"
   workflow_call:
 
 concurrency:
   group: cq.${{ github.ref || github.run_id }}.${{ github.event_name }}
   cancel-in-progress: true
+
+env:
+  NODE_JS_VERSION: 18.19.1
 
 jobs:
   linting:
@@ -24,17 +21,20 @@ jobs:
       - name: Checkout current repository
         uses: actions/checkout@v4
 
-      - name: Checkout remote composite actions
-        uses: ./.github/workflows/composite-actions
+      - uses: actions/setup-node@v4
         with:
-          ACTION_APP_ID: ${{ secrets.ACTION_APP_ID }}
-          ACTION_APP_KEY: ${{ secrets.ACTION_APP_KEY }}
+          node-version: ${{env.NODE_JS_VERSION}}
+          cache: "npm"
 
-      - name: 🚧 Run linting script
-        uses: ./.github/actions/commands/nodejs/exec-docker
-        with:
-          NODE_VERSION: 18.19.1
-          COMMAND: npm run lint:ci
+      - name: Install Libraries
+        run: |
+          npm ci
+        shell: bash
+
+      - name: 🚧 Execute
+        run: |
+          npm run lint:ci
+        shell: bash
 
   format:
     name: Format Check
@@ -43,14 +43,39 @@ jobs:
       - name: Checkout current repository
         uses: actions/checkout@v4
 
-      - name: Checkout remote composite actions
-        uses: ./.github/workflows/composite-actions
+      - uses: actions/setup-node@v4
         with:
-          ACTION_APP_ID: ${{ secrets.ACTION_APP_ID }}
-          ACTION_APP_KEY: ${{ secrets.ACTION_APP_KEY }}
+          node-version: ${{env.NODE_JS_VERSION}}
+          cache: "npm"
 
-      - name: 🚧 Run format check script
-        uses: ./.github/actions/commands/nodejs/exec-docker
+      - name: Install Libraries
+        run: |
+          npm ci
+        shell: bash
+
+      - name: 🚧 Execute
+        run: |
+          npm run format:check:ci
+        shell: bash
+
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout current repository
+        uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
         with:
-          NODE_VERSION: 18.19.1
-          COMMAND: npm run format:check:ci
+          node-version: ${{env.NODE_JS_VERSION}}
+          cache: "npm"
+
+      - name: Install Libraries
+        run: |
+          npm ci
+        shell: bash
+
+      - name: 🚧 Execute
+        run: |
+          npm run test
+        shell: bash

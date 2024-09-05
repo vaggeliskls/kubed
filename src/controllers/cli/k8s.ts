@@ -6,7 +6,9 @@ import { actionRunner } from "../../shared/errors";
 import * as deployer from "../deployer";
 import * as k8s from "../kubernetes";
 
+import * as k8sIngressClass from "./ingress-class";
 import * as pods from "./pods";
+import * as k8sStorageClass from "./storage-class";
 
 export function k8sCli(): Command {
   // DEPLOY
@@ -95,5 +97,8 @@ export function k8sCli(): Command {
         cliOutput.success({ title: "Display of storage classes completed" });
       })
     );
+
+  k8sCli.addCommand(k8sIngressClass.k8sIngressClassCli());
+  k8sCli.addCommand(k8sStorageClass.k8sStorageClassCli());
   return k8sCli;
 }

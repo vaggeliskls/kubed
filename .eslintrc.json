@@ -1,0 +1,20 @@
+{
+  "root": true,
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "project": ["tsconfig.eslint.json"],
+    "ecmaVersion": "latest",
+    "sourceType": "module"
+  },
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended",
+    "prettier",
+    "./tools/eslint/typescript.json",
+    "./tools/eslint/naming-convention.json",
+    "./tools/eslint/import-order.json"
+  ],
+  "rules": {
+    "@typescript-eslint/no-explicit-any": "warn"
+  }
+}

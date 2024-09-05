@@ -6,15 +6,7 @@ import { cliOutput } from "../../shared/cli";
 import * as k8s from "../kubernetes";
 import * as system from "../system";
 
-import {
-  Chart,
-  ConfigMap,
-  DataTypeEnum,
-  IDeployer,
-  IDict,
-  Secret,
-  SettingFile,
-} from "./environment.model";
+import { DataTypeEnum, IDeployer, IDict, SettingFile } from "./environment.model";
 import * as parser from "./parser";
 
 function getPackagedAppDetails(): IDict | any {
@@ -66,31 +58,17 @@ export async function getDeployerValues(
 ): Promise<IDict> {
   const localOnly = options?.localOnly ?? false;
   // We exlude properties eather with command args or settings file
-  const exclude = _.union(
-    options?.exclude ?? [],
-    parser.getSettings()?.EXCLUDE ?? []
-  );
+  const exclude = _.union(options?.exclude ?? [], parser.getSettings()?.EXCLUDE ?? []);
   const settingsOverride = parser.getSettings()?.OVERRIDE;
   let forceOverrideValues: IDict = {};
   // We override with command arguments
   if (options?.override?.length ?? 0 > 0) {
-    const overrideValues = system.readEnvFile(
-      (options?.override as any).join("\r\n"),
-      false
-    );
-    forceOverrideValues = Object.assign(
-      {},
-      forceOverrideValues,
-      overrideValues
-    );
+    const overrideValues = system.readEnvFile((options?.override as any).join("\r\n"), false);
+    forceOverrideValues = Object.assign({}, forceOverrideValues, overrideValues);
   }
   // We override with settings file
   if (!_.isEmpty(settingsOverride)) {
-    forceOverrideValues = Object.assign(
-      {},
-      forceOverrideValues,
-      settingsOverride
-    );
+    forceOverrideValues = Object.assign({}, forceOverrideValues, settingsOverride);
   }
   // Get the namespace, configMapName and secretName from the envData
   const namespace: string = envData.namespace;
@@ -100,10 +78,7 @@ export async function getDeployerValues(
   let localSettings = await parser.getLocalSettingsDict(envData, { exclude });
   // We override only the setting key when the override values appear on argumensts or settings file
   if (!_.isEmpty(forceOverrideValues)) {
-    localSettings = _.assign(
-      localSettings,
-      _.pick(forceOverrideValues, _.keys(localSettings))
-    );
+    localSettings = _.assign(localSettings, _.pick(forceOverrideValues, _.keys(localSettings)));
   }
   let localConfigMapValues: IDict = {};
   let localSecretValues: IDict = {};
@@ -124,25 +99,15 @@ export async function getDeployerValues(
 
     // Config Map
     // Get remote values if they exist
-    const remoteConfigMapValues = await k8s.getConfigMapData(
-      configMapName,
-      namespace
-    );
+    const remoteConfigMapValues = await k8s.getConfigMapData(configMapName, namespace);
     // When we have remote config values
     if (remoteConfigMapValues) {
       localConfigMapValues = remoteConfigMapValues;
       const dynamicValues = await parser.getLocalConfigMapDict(envData, {
         filterByProperty: ["value"],
-        exclude: system.uniqueArrayValues(
-          exclude,
-          parser.getKeysListByProp(envData, "lock")
-        ),
+        exclude: system.uniqueArrayValues(exclude, parser.getKeysListByProp(envData, "lock")),
       });
-      localConfigMapValues = Object.assign(
-        {},
-        localConfigMapValues,
-        dynamicValues
-      );
+      localConfigMapValues = Object.assign({}, localConfigMapValues, dynamicValues);
       // We want to keep prompt and random types untouched while update the dynamic config and secret with static values
       // We calculate if there is any new config map that is prompt or random to generate new val while keep the other untouched
       const uniqueKeys = system.uniqueArrayValues(
@@ -157,11 +122,7 @@ export async function getDeployerValues(
               exclude,
             })
           : {};
-      localConfigMapValues = Object.assign(
-        {},
-        localConfigMapValues,
-        staticProperties
-      );
+      localConfigMapValues = Object.assign({}, localConfigMapValues, staticProperties);
       // We override only the setting key when the override values appear on argumensts or settings file
       if (!_.isEmpty(forceOverrideValues)) {
         localConfigMapValues = _.assign(
@@ -170,12 +131,7 @@ export async function getDeployerValues(
         );
       }
       // Update the config map
-      await k8s.createOrPatchConfigMap(
-        configMapName,
-        namespace,
-        localConfigMapValues,
-        true
-      );
+      await k8s.createOrPatchConfigMap(configMapName, namespace, localConfigMapValues, true);
     } else {
       // Get local values for config map
       localConfigMapValues = await parser.getLocalConfigMapDict(envData, {
@@ -189,12 +145,7 @@ export async function getDeployerValues(
         );
       }
       // Create or patch the config map
-      await k8s.createOrPatchConfigMap(
-        configMapName,
-        namespace,
-        localConfigMapValues,
-        false
-      );
+      await k8s.createOrPatchConfigMap(configMapName, namespace, localConfigMapValues, false);
     }
     // Secret
     // Get remote values if they exist
@@ -204,10 +155,7 @@ export async function getDeployerValues(
       localSecretValues = remoteSecretValues;
       const dynamicValues = await parser.getLocalSecretDict(envData, {
         filterByProperty: ["value"],
-        exclude: system.uniqueArrayValues(
-          exclude,
-          parser.getKeysListByProp(envData, "lock")
-        ),
+        exclude: system.uniqueArrayValues(exclude, parser.getKeysListByProp(envData, "lock")),
       });
       localSecretValues = Object.assign({}, localSecretValues, dynamicValues);
       // We want to keep prompt and random types untouched while update the config and secret with static values
@@ -225,11 +173,7 @@ export async function getDeployerValues(
             })
           : {};
 
-      localSecretValues = Object.assign(
-        {},
-        localSecretValues,
-        staticProperties
-      );
+      localSecretValues = Object.assign({}, localSecretValues, staticProperties);
       // We override only the secret key when the override values appear on argumensts or settings file
       if (!_.isEmpty(forceOverrideValues)) {
         localSecretValues = _.assign(
@@ -237,12 +181,7 @@ export async function getDeployerValues(
           _.pick(forceOverrideValues, _.keys(localSecretValues))
         );
       }
-      await k8s.createOrPatchSecret(
-        secretName,
-        namespace,
-        localSecretValues,
-        true
-      );
+      await k8s.createOrPatchSecret(secretName, namespace, localSecretValues, true);
     } else {
       // Generate local values and update remote secret config
       localSecretValues = await parser.getLocalSecretDict(envData, { exclude });
@@ -254,26 +193,15 @@ export async function getDeployerValues(
         );
       }
       // Create or patch the secret
-      await k8s.createOrPatchSecret(
-        secretName,
-        namespace,
-        localSecretValues,
-        false
-      );
+      await k8s.createOrPatchSecret(secretName, namespace, localSecretValues, false);
     }
   }
   // Return the merged values
-  const deployerValues = Object.assign(
-    {},
-    localSettings,
-    localConfigMapValues,
-    localSecretValues,
-    {
-      NAMESPACE: namespace,
-      CONFIG_NAME: configMapName,
-      SECRET_NAME: secretName,
-    }
-  );
+  const deployerValues = Object.assign({}, localSettings, localConfigMapValues, localSecretValues, {
+    NAMESPACE: namespace,
+    CONFIG_NAME: configMapName,
+    SECRET_NAME: secretName,
+  });
   return deployerValues;
 }
 
@@ -283,10 +211,7 @@ export async function getDeployerValues(
  * @param {string} environment - The forced environment to use.
  * @returns {Promise<string>} - A promise that resolves to the selected environment.
  */
-export async function selectEnvironment(
-  prompt = false,
-  environment?: string
-): Promise<string> {
+export async function selectEnvironment(prompt = false, environment?: string): Promise<string> {
   // Get environments and settings
   const envs = parser.getEnvironments();
   if (envs.length === 0) {
@@ -299,13 +224,9 @@ export async function selectEnvironment(
   // Check if environment needs to be reset
   // Prompt user to select environment
   if ((!settings.ENVIRONMENT || prompt) && !environment) {
-    settings.ENVIRONMENT = await system.promptChoise(
-      "Selected environment",
-      envs,
-      {
-        initial: settings.ENVIRONMENT,
-      }
-    );
+    settings.ENVIRONMENT = await system.promptChoise("Selected environment", envs, {
+      initial: settings.ENVIRONMENT,
+    });
   } else {
     settings.ENVIRONMENT = environment ?? settings.ENVIRONMENT;
   }
@@ -350,77 +271,9 @@ export function preparePackagedFiles(
       !system.pathExists(`./assets/${asset}`) &&
       system.pathExists(`${system.packagedPwd()}/assets/${asset}`)
     ) {
-      system.copyPaste(
-        `${system.packagedPwd()}/assets/${asset}`,
-        `./assets/${asset}`
-      );
+      system.copyPaste(`${system.packagedPwd()}/assets/${asset}`, `./assets/${asset}`);
     }
   }
-}
-
-export async function generateSingleChart(): Promise<void> {
-  // To deploy the exported helm chart
-  const selectedEnv = await selectEnvironment(false, "production");
-  const envData = parser.getMergedEnvironment(selectedEnv);
-  deploymentInfo(envData);
-  const deployerValues = await getDeployerValues(envData, { localOnly: true });
-  // Get local charts values
-  const charts = await parser.getLocalChartsValues(envData, { deployerValues });
-  const chartFolder = "./single-chart";
-  const chartFilePath = `${chartFolder}/Chart.yaml`;
-  const chartTemplatesPath = `${chartFolder}/templates`;
-  const chartSubChartsPath = `${chartFolder}/charts`;
-  system.deletePath(chartFolder);
-  system.createFolder(chartFolder);
-  system.createFolder(chartTemplatesPath);
-  system.createFolder(chartSubChartsPath);
-  const chartYml = new Chart();
-  for (const chart of charts) {
-    const chartYaml = system.openYamlFile(`${chart.path}/Chart.yaml`) as Chart;
-    system.copyPaste(`${chart.path}`, `${chartSubChartsPath}/${chart.name}`, {
-      filter: (file) => !file.includes("j2"),
-    });
-    const subchart = system.openYamlFile(
-      `${chartSubChartsPath}/${chart.name}/Chart.yaml`
-    ) as Chart;
-    subchart.name = chart.name;
-    system.writeToFile(
-      `${chartSubChartsPath}/${chart.name}/Chart.yaml`,
-      subchart,
-      "yaml"
-    );
-    chartYml.dependencies.push({
-      name: chart.name,
-      version: chartYaml.version,
-    });
-    system.writeToFile(
-      `${chartSubChartsPath}/${chart.name}/values.yaml`,
-      chart.templateContext
-    );
-  }
-  // Prepare configMap and secret
-  const configMapKeys = envData.ConfigMap.data.map((el) => el.key);
-  const secretKeys = envData.Secret.data.map((el) => el.key);
-  const configMapDict = Object.fromEntries(
-    Object.entries(deployerValues).filter(([key]) =>
-      configMapKeys.includes(key)
-    )
-  );
-  const secretDict = Object.fromEntries(
-    Object.entries(deployerValues).filter(([key]) => secretKeys.includes(key))
-  );
-  const configMap = new ConfigMap();
-  configMap.metadata.namespace = "{{ .Release.Namespace }}";
-  configMap.metadata.name = deployerValues["CONFIG_NAME"];
-  configMap.data = configMapDict;
-  const secret = new Secret();
-  secret.metadata.namespace = "{{ .Release.Namespace }}";
-  secret.metadata.name = deployerValues["SECRET_NAME"];
-  secret.data = k8s.encodeSecretData(secretDict);
-  system.writeToFile(`${chartTemplatesPath}/configMap.yaml`, configMap, "yaml");
-  system.writeToFile(`${chartTemplatesPath}/secret.yaml`, secret, "yaml");
-  system.writeToFile(chartFilePath, chartYml, "yaml");
-  await k8s.template({ path: chartFolder } as any, { output: false });
 }
 
 export async function awsLocalConfigure(): Promise<{
@@ -469,12 +322,7 @@ export async function awsLocalConfigure(): Promise<{
     ));
   const region =
     system.getEnv("AWS_REGION") ??
-    (await system.promptText(
-      "AWS REGION",
-      true,
-      false,
-      existingConfig["region"] ?? "eu-west-2"
-    ));
+    (await system.promptText("AWS REGION", true, false, existingConfig["region"] ?? "eu-west-2"));
 
   system.writeToFile(
     credentialsFile,
