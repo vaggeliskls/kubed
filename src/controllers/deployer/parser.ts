@@ -1,5 +1,6 @@
 // Importing necessary modules and interfaces
 import * as _ from "lodash";
+import path from "path";
 
 import * as system from "../system";
 
@@ -38,7 +39,7 @@ export function mergeArrayObjectByKey(
   target: any,
   source: any,
   key = "key"
-): IData[] {
+): IData[] | IChartsData[] {
   // Merge the two arrays by key
   const targetMap = _.keyBy(target, key);
   const sourceMap = _.keyBy(source, key);
@@ -60,23 +61,27 @@ export function mergeEnvironments(
   // Replace the Secret name with the selected environment's Secret name, if it exists, otherwise use the default environment's Secret name
   mergedEnvData.Secret.name =
     selectedEnv.Secret?.name ?? defaultEnv.Secret?.name;
-  // Replace the Charts data with the selected environment's Charts data
-  mergedEnvData.Charts.data = selectedEnv.Charts.data;
   // Override the default data with the selected environment's ConfigMap data
   mergedEnvData.ConfigMap.data = mergeArrayObjectByKey(
     defaultEnv.ConfigMap.data,
     selectedEnv.ConfigMap.data
-  );
+  ) as IData[];
   // Override the default data with the selected environment's Secret data
   mergedEnvData.Secret.data = mergeArrayObjectByKey(
     defaultEnv.Secret.data,
     selectedEnv.Secret.data
-  );
+  ) as IData[];
   // Override the default Settings with the selected environment's Settings
   mergedEnvData.Settings = mergeArrayObjectByKey(
     defaultEnv.Settings,
     selectedEnv.Settings
-  );
+  ) as IData[];
+  // Override the Charts data with the selected environment's Charts data
+  mergedEnvData.Charts.data = mergeArrayObjectByKey(
+    defaultEnv.Charts.data,
+    selectedEnv.Charts.data,
+    "name"
+  ) as IChartsData[];
   // Return the merged environment
   return mergedEnvData;
 }
@@ -298,16 +303,13 @@ export async function getLocalChartsValues(
   const defaultTemplateDirectory = getSettings().DEFAULT_TEMPLATE_PATH;
   // Loop through the charts
   for (const chart of charts) {
-    chart.remote = ["oci://", "https://", "http://"].some((term) =>
-      chart.path.includes(term)
-    )
-      ? true
-      : false;
     chart.type = chart.path.includes("oci://")
       ? "oci"
-      : chart.path.includes("http://") || chart.path.includes("https://")
+      : chart?.repository?.includes("http://") ||
+        chart?.repository?.includes("https://")
       ? "http"
       : "local";
+    chart.remote = chart.type === "local" ? false : true;
     const defaultTemplatePath = `${defaultTemplateDirectory}/${chart.name}.template.yaml`;
     // If the default template exists, set it as the chart's template
     const defaultTemplate = system.pathExists(defaultTemplatePath)
@@ -322,7 +324,15 @@ export async function getLocalChartsValues(
     chart.debug = chart?.debug ?? false;
     chart.completed = undefined;
     chart.timeout = chart?.timeout ?? options?.timeout ?? "5m0s";
-
+    // OCI or Remote chart path override
+    const cachedPackage = `assets/charts/cache/${path.basename(chart.path)}-${
+      chart?.version
+    }.tgz`;
+    chart.cache =
+      chart.remote && system.pathExists(cachedPackage)
+        ? cachedPackage
+        : undefined;
+    // ------
     // If deployerValues are provided, render the chart's template
     if (options?.deployerValues && chart?.template) {
       chart.templateContext = chart.template
@@ -331,10 +341,9 @@ export async function getLocalChartsValues(
     }
   }
   // // Sort the charts by ascending priority
-  // return charts.sort((first, second) => {
-  //   return (first as any)?.priority - (second as any)?.priority;
-  // });
-  return charts;
+  return charts.sort((first, second) => {
+    return first.priority - second.priority;
+  });
 }
 
 // Function to get environments

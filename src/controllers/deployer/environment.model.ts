@@ -25,11 +25,11 @@ export class SettingFile {
 
 export class Chart {
   apiVersion = "v2";
-  name = "chart-name";
+  name = "single-chart-generator";
   description = "The generic single chart application";
   type = "application";
   version = "0.1.0";
-  appVersion = "0.16.0";
+  appVersion = "1.12.0";
   dependencies: {
     name: string;
     version?: string;
@@ -72,6 +72,7 @@ export interface ISecret {
 export interface IChartsData {
   name: string;
   path: string;
+  cache?: string;
   version?: string;
   group: string;
   template?: string;
@@ -79,14 +80,13 @@ export interface IChartsData {
   waitForJobs?: boolean;
   timeout?: string;
   completed?: boolean;
-  priority?: number;
+  priority: number;
   namespace?: string;
   debug?: boolean;
   templateContext?: any;
   images?: string[];
   remote: boolean;
   repository?: string;
-  repositoryName?: string;
   type?: "oci" | "http" | "local";
 }
 

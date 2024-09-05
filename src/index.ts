@@ -25,6 +25,7 @@ async function run() {
     .addCommand(cli.k8sCli())
     .addCommand(cli.wrappersCLI())
     .addCommand(cli.k3dCli())
+    .addCommand(cli.generateCli())
     .option("--verbose", "Display detailed execution information")
     .on("option:verbose", () => (process.env[KUBED_VERBOSE_LOGGING] = "true"))
     .option("--dry-run", "Run without executing commands")

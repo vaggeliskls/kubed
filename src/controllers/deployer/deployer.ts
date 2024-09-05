@@ -7,12 +7,9 @@ import * as k8s from "../kubernetes";
 import * as system from "../system";
 
 import {
-  Chart,
-  ConfigMap,
   DataTypeEnum,
   IDeployer,
   IDict,
-  Secret,
   SettingFile,
 } from "./environment.model";
 import * as parser from "./parser";
@@ -356,71 +353,6 @@ export function preparePackagedFiles(
       );
     }
   }
-}
-
-export async function generateSingleChart(): Promise<void> {
-  // To deploy the exported helm chart
-  const selectedEnv = await selectEnvironment(false, "production");
-  const envData = parser.getMergedEnvironment(selectedEnv);
-  deploymentInfo(envData);
-  const deployerValues = await getDeployerValues(envData, { localOnly: true });
-  // Get local charts values
-  const charts = await parser.getLocalChartsValues(envData, { deployerValues });
-  const chartFolder = "./single-chart";
-  const chartFilePath = `${chartFolder}/Chart.yaml`;
-  const chartTemplatesPath = `${chartFolder}/templates`;
-  const chartSubChartsPath = `${chartFolder}/charts`;
-  system.deletePath(chartFolder);
-  system.createFolder(chartFolder);
-  system.createFolder(chartTemplatesPath);
-  system.createFolder(chartSubChartsPath);
-  const chartYml = new Chart();
-  for (const chart of charts) {
-    const chartYaml = system.openYamlFile(`${chart.path}/Chart.yaml`) as Chart;
-    system.copyPaste(`${chart.path}`, `${chartSubChartsPath}/${chart.name}`, {
-      filter: (file) => !file.includes("j2"),
-    });
-    const subchart = system.openYamlFile(
-      `${chartSubChartsPath}/${chart.name}/Chart.yaml`
-    ) as Chart;
-    subchart.name = chart.name;
-    system.writeToFile(
-      `${chartSubChartsPath}/${chart.name}/Chart.yaml`,
-      subchart,
-      "yaml"
-    );
-    chartYml.dependencies.push({
-      name: chart.name,
-      version: chartYaml.version,
-    });
-    system.writeToFile(
-      `${chartSubChartsPath}/${chart.name}/values.yaml`,
-      chart.templateContext
-    );
-  }
-  // Prepare configMap and secret
-  const configMapKeys = envData.ConfigMap.data.map((el) => el.key);
-  const secretKeys = envData.Secret.data.map((el) => el.key);
-  const configMapDict = Object.fromEntries(
-    Object.entries(deployerValues).filter(([key]) =>
-      configMapKeys.includes(key)
-    )
-  );
-  const secretDict = Object.fromEntries(
-    Object.entries(deployerValues).filter(([key]) => secretKeys.includes(key))
-  );
-  const configMap = new ConfigMap();
-  configMap.metadata.namespace = "{{ .Release.Namespace }}";
-  configMap.metadata.name = deployerValues["CONFIG_NAME"];
-  configMap.data = configMapDict;
-  const secret = new Secret();
-  secret.metadata.namespace = "{{ .Release.Namespace }}";
-  secret.metadata.name = deployerValues["SECRET_NAME"];
-  secret.data = k8s.encodeSecretData(secretDict);
-  system.writeToFile(`${chartTemplatesPath}/configMap.yaml`, configMap, "yaml");
-  system.writeToFile(`${chartTemplatesPath}/secret.yaml`, secret, "yaml");
-  system.writeToFile(chartFilePath, chartYml, "yaml");
-  await k8s.template({ path: chartFolder } as any, { output: false });
 }
 
 export async function awsLocalConfigure(): Promise<{
