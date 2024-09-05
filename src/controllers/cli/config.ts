@@ -128,5 +128,40 @@ export function configCli(): Command {
       })
     );
 
+  configCli
+    .command("charts")
+    .description("Display environment charts")
+    .addOption(new Option("--env <text>", "Force environment by name"))
+    .addOption(new Option("--change-env", "Change environment selection").default(false))
+    .action(
+      actionRunner(async (options: any) => {
+        const selectedEnv = await deployer.selectEnvironment(options.changeEnv, options?.env);
+        const envData = deployer.getMergedEnvironment(selectedEnv);
+        deployer.deploymentInfo(envData);
+        const deployerValues = await deployer.getDeployerValues(envData, { localOnly: true });
+        const charts = await deployer.getLocalChartsValues(envData, {
+          deployerValues,
+        });
+        const table = new Table({
+          head: ["Index", "Name", "Chart", "Version"],
+        });
+        const toGreen = cliOutput.colors.green;
+        let index = 1;
+        for (const chart of charts) {
+          table.push([
+            toGreen(index),
+            toGreen(chart.name),
+            toGreen(chart.cache || chart.path),
+            toGreen(chart.version || "-"),
+          ]);
+          index++;
+        }
+        cliOutput.log({
+          title: "Display environment charts",
+          bodyLines: [table.toString()],
+        });
+      })
+    );
+
   return configCli;
 }
