@@ -31,20 +31,14 @@ function parseOs(): { name: string; arch: string } {
       title: error.message,
       bodyLines: [
         `Example: ${OS_FLAG}=${SUPPORTED_OS[0]}`,
-        `Supported OS: ${SUPPORTED_OS.map(
-          (os) => `\n${cliOutput.X_PADDING}- ${os}`
-        )}`,
+        `Supported OS: ${SUPPORTED_OS.map(os => `\n${cliOutput.X_PADDING}- ${os}`)}`,
       ],
     });
     process.exit(1);
   }
 }
 
-async function packageApp(
-  os: string,
-  arch: string,
-  isOffline: boolean
-): Promise<string> {
+async function packageApp(os: string, arch: string, isOffline: boolean): Promise<string> {
   const osMap = { linux: "linuxstatic", darwin: "macos", windows: "win" };
   const archMap = { amd64: "x64", arm64: "arm64" };
 
@@ -71,11 +65,7 @@ async function packageApp(
 
   cliOutput.log({
     title: `${cliOutput.START_SYMBOL} Start packaging...`,
-    bodyLines: [
-      `OS: ${os}`,
-      `Arch: ${arch}`,
-      `Package dependencies: ${withDeps}`,
-    ],
+    bodyLines: [`OS: ${os}`, `Arch: ${arch}`, `Package dependencies: ${withDeps}`],
   });
 
   // build the app
@@ -85,9 +75,7 @@ async function packageApp(
   executor.runCommand("npx rimraf assets/packages");
   // download dependencies if needed
   if (withDeps) {
-    executor.runCommand(
-      `npm run start:prod -- init --all --os ${os} --arch ${arch}`
-    );
+    executor.runCommand(`npm run start:prod -- init --all --os ${os} --arch ${arch}`);
   }
 
   // finally, package the app with pkg

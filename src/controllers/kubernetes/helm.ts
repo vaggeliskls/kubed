@@ -17,8 +17,7 @@ async function repositoryAdd(chart: IChartsData): Promise<void> {
 // Deploy function to deploy a chart
 export async function deploy(chart: IChartsData): Promise<void> {
   repositoryAdd(chart);
-  const version =
-    chart.version && chart.remote ? `--version ${chart?.version}` : "";
+  const version = chart.version && chart.remote ? `--version ${chart?.version}` : "";
   // If chart has a template context, set configFile to "-f -", else set it to an empty string
   const configFile = chart.templateContext ? "-f -" : "";
   // If chart has wait flag, set wait to "--wait", else set it to an empty string
@@ -26,16 +25,13 @@ export async function deploy(chart: IChartsData): Promise<void> {
   // If chart has wait flag, set wait to "--wait-for-jobs", else set it to an empty string
   const waitForJobs = chart.waitForJobs ? "--wait-for-jobs" : "";
   // if wait of waitforjobs enabled we add timeout
-  const timeout =
-    chart.waitForJobs || chart.wait ? `--timeout ${chart.timeout}` : "";
+  const timeout = chart.waitForJobs || chart.wait ? `--timeout ${chart.timeout}` : "";
   // If chart has debug flag, set dryRun to "--debug --dry-run", else set it to an empty string
   const dryRun = chart.debug ? "--debug --dry-run" : "";
   // Set cmd to the helm upgrade command with the appropriate flags and chart details
   const cmd = `helm upgrade --install --create-namespace ${dryRun} ${version} --namespace=${
     chart.namespace
-  } ${wait} ${waitForJobs} ${timeout} ${chart.name} ${
-    chart.cache || chart.path
-  } ${configFile}`;
+  } ${wait} ${waitForJobs} ${timeout} ${chart.name} ${chart.cache || chart.path} ${configFile}`;
   // Execute the command using the system module
   await executor.runCommandAsync(cmd, { input: chart.templateContext });
 }
@@ -46,18 +42,15 @@ export async function template(
   options?: { output?: boolean }
 ): Promise<string> {
   repositoryAdd(chart);
-  const version =
-    chart.version && chart.remote ? `--version ${chart?.version}` : "";
+  const version = chart.version && chart.remote ? `--version ${chart?.version}` : "";
   // If chart has a template context, set configFile to "-f -", else set it to an empty string
   const configFile = chart.templateContext ? "-f -" : "";
   // If chart has debug flag, set dryRun to "--debug --dry-run", else set it to an empty string
   const dryRun = chart.debug ? "--debug --dry-run" : "";
   // Set outputDir to "--output-dir ./templates"
-  const outputDir = options?.output ?? true ? "--output-dir ./templates" : "";
+  const outputDir = (options?.output ?? true) ? "--output-dir ./templates" : "";
   // Set cmd to the helm template command with the appropriate flags and chart details
-  const cmd = `helm template ${chart.name} ${
-    chart.cache || chart.path
-  } --namespace=${
+  const cmd = `helm template ${chart.name} ${chart.cache || chart.path} --namespace=${
     chart.namespace
   } ${version} ${dryRun} ${outputDir} ${configFile}`;
   // Execute the command using the system module
@@ -72,8 +65,7 @@ export async function update(chart: IChartsData): Promise<void> {
   let cmd = "";
   const cachePath = "assets/charts/cache";
   system.createFolder(cachePath);
-  const version =
-    chart.version && chart.remote ? `--version ${chart?.version}` : "";
+  const version = chart.version && chart.remote ? `--version ${chart?.version}` : "";
   if (chart.type === "local") {
     cmd = `helm dependency update ${chart.path}`;
   } else {
@@ -111,17 +103,13 @@ export async function uninstall(chart: IChartsData): Promise<void> {
 // Releases function to get a list of releases in a namespace
 export async function getRemoteReleases(namespace: string): Promise<string[]> {
   // Set releases to the output of the helm list command with the appropriate flags and namespace
-  const releases = await executor.runCommandAsync(
-    `helm list -a -n ${namespace} --short`
-  );
+  const releases = await executor.runCommandAsync(`helm list -a -n ${namespace} --short`);
   // Split the releases string by newline and return the resulting array
-  return releases.split("\n").filter((n) => n);
+  return releases.split("\n").filter(n => n);
 }
 
 // ExportReleaseImages function to export images from a chart
-export async function exportChartsImages(
-  charts: IChartsData[]
-): Promise<string[]> {
+export async function exportChartsImages(charts: IChartsData[]): Promise<string[]> {
   const deepSearch = (obj: any, key: string): string[] => {
     if (_.has(obj, key) && typeof obj[key] === "string") {
       return [obj[key]];

@@ -25,9 +25,8 @@ export async function printPackagesInfo(): Promise<void> {
     },
     kubectl: {
       local: isLocal("kubectl"),
-      version: JSON.parse(
-        (await getVersion("kubectl version --client --output json")) ?? null
-      )?.clientVersion?.gitVersion,
+      version: JSON.parse((await getVersion("kubectl version --client --output json")) ?? null)
+        ?.clientVersion?.gitVersion,
     },
     skopeo: {
       local: isLocal("skopeo"),
@@ -77,8 +76,7 @@ export function systemDetails(): {
   } else {
     selectedOs = "linux";
   }
-  const selectedArch: "arm64" | "amd64" =
-    arch === "arm" || arch === "arm64" ? "arm64" : "amd64";
+  const selectedArch: "arm64" | "amd64" = arch === "arm" || arch === "arm64" ? "arm64" : "amd64";
   return {
     os: selectedOs,
     arch: selectedArch,
@@ -135,19 +133,13 @@ export async function preparePrerequisites(
         ),
     },
   ];
-  const tasks = all
-    ? prerequisites.concat(offlinePrerequisites)
-    : prerequisites;
+  const tasks = all ? prerequisites.concat(offlinePrerequisites) : prerequisites;
   await deployer.runTasks(tasks, "Download Prerequisites");
   // helm exteract and prepare
-  await system.extractTarFile(
-    `${packagesFolder}/helm.tar`,
-    `${packagesFolder}`,
-    {
-      strip: true,
-      exclude: ["README.md", "LICENSE"],
-    }
-  );
+  await system.extractTarFile(`${packagesFolder}/helm.tar`, `${packagesFolder}`, {
+    strip: true,
+    exclude: ["README.md", "LICENSE"],
+  });
   system.deletePath(`${packagesFolder}/helm.tar`);
   if (sysDetails.chmod) {
     await executor.runCommandAsync(`chmod +x ${packagesFolder}/*`);
