@@ -9,8 +9,16 @@ export interface IDict {
   [key: string]: string;
 }
 
+export enum StateEnum {
+  Local = "local",
+  K8s = "k8s",
+  Off = "off",
+}
+
 export class SettingFile {
   ENVIRONMENT = "";
+  NAMESPACE = "";
+  STATE: StateEnum = StateEnum.Off;
   DEFAULT_TEMPLATE_PATH?: string = "./assets/charts/values";
   EXLUDE_ENVIRONMENTS: string[] = ["default.json"];
   PACKAGES = {
@@ -18,6 +26,10 @@ export class SettingFile {
     HELM: "v3.14.0",
     SKOPEO: "v1.14.0",
     K3D: "v5.6.0",
+  };
+  ARGS = {
+    KUBECTL: "",
+    HELM: "",
   };
   OVERRIDE = {};
   EXCLUDE = [];
@@ -56,6 +68,7 @@ export class Secret {
     name: "kubed-global-secret",
     namespace: "kubed",
   };
+  type = "Opaque";
   data: IDict = {};
 }
 
@@ -79,14 +92,15 @@ export interface IChartsData {
   wait?: boolean;
   waitForJobs?: boolean;
   timeout?: string;
-  completed?: boolean;
   priority: number;
   namespace?: string;
+  namespaceCreate?: boolean;
   debug?: boolean;
   templateContext?: any;
   images?: string[];
   remote: boolean;
   repository?: string;
+  chartTemplateHash?: string;
   type?: "oci" | "http" | "local";
 }
 
@@ -110,6 +124,7 @@ export interface IData {
   sensitive: boolean;
   display?: boolean;
   lock?: boolean;
+  charset?: string[];
 }
 
 export enum DataTypeEnum {

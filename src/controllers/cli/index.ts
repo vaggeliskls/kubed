@@ -8,7 +8,4 @@ export * from "./lint";
 export * from "./k3d";
 export * from "./wrapper";
 export * from "./k8s";
-export * from "./pods";
 export * from "./update";
-export * from "./ingress-class";
-export * from "./storage-class";

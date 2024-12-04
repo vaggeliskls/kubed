@@ -1,4 +1,4 @@
-# Kubed - Kubernetes Deployer ✈️
+# Kubed - Kubernetes Deployer
 
 This tool is designed to streamline the process of deploying our products to Kubernetes clusters, making it simpler, more efficient, and hassle-free.
 
@@ -7,7 +7,6 @@ This tool is designed to streamline the process of deploying our products to Kub
 To build our tool from source, you need to have the following prerequisites in your system:
 
 - [Node.js active LTS or maintenance LTS](https://nodejs.org/en/about/releases/) version is required. For information about specific version requirements, see the `engines` key in the `package.json` file.
-- [AWS-CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html), which will be required for configuring and adding AWS clusters.
 
 ## How to Deploy - Step by Step Instructions 🚀
 
@@ -35,13 +34,6 @@ Before starting your deployment, ensure that you have validated and chosen a Kub
 npm run start -- config cluster
 ```
 
-#### More Clusters? No Problem!
-
-To add fresh clusters, utilize the following commands:
-
-- For Incorporating AWS Cluster: `npm run start -- config add-aws-cluster`
-- For Integrating Azure Cluster: `npm run start -- add-azure-cluster`
-
 ### 4️⃣ Begin the Deployment Process
 
 The command below runs the complete deployment procedure:
@@ -49,8 +41,6 @@ The command below runs the complete deployment procedure:
 ```shell
 npm run start -- deploy up
 ```
-
-> Optionally you can set the `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` to skip manual input of the credentials for AWS ECR registries.
 
 #### CLI Options For You to Consider 💡
 

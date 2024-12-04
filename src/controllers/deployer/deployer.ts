@@ -3,6 +3,7 @@ import Table from "cli-table3";
 import * as _ from "lodash";
 
 import { cliOutput } from "../../shared/cli";
+import { isDryRun } from "../../shared/utils";
 import * as k8s from "../kubernetes";
 import * as system from "../system";
 
@@ -54,9 +55,14 @@ export function printDeployerLogo(): void {
  */
 export async function getDeployerValues(
   envData: IDeployer,
-  options?: { localOnly?: boolean; exclude?: string[]; override?: string[] }
+  options?: {
+    localOnly?: boolean;
+    exclude?: string[];
+    override?: string[];
+    skipCreateNamespace?: boolean;
+  }
 ): Promise<IDict> {
-  const localOnly = options?.localOnly ?? false;
+  const localOnly = isDryRun() ? true : (options?.localOnly ?? false);
   // We exlude properties eather with command args or settings file
   const exclude = _.union(options?.exclude ?? [], parser.getSettings()?.EXCLUDE ?? []);
   const settingsOverride = parser.getSettings()?.OVERRIDE;
@@ -76,27 +82,35 @@ export async function getDeployerValues(
   const secretName = envData.Secret.name as string;
   // Get local settings
   let localSettings = await parser.getLocalSettingsDict(envData, { exclude });
-  // We override only the setting key when the override values appear on argumensts or settings file
+  // We override all the settings when the override values appear on argumensts or settings file
   if (!_.isEmpty(forceOverrideValues)) {
-    localSettings = _.assign(localSettings, _.pick(forceOverrideValues, _.keys(localSettings)));
+    localSettings = Object.assign({}, localSettings, forceOverrideValues);
   }
   let localConfigMapValues: IDict = {};
   let localSecretValues: IDict = {};
 
   if (localOnly) {
     // Get local values for configMap and secret
-    localConfigMapValues = await parser.getLocalConfigMapDict(envData, {
-      localOnly,
-      exclude,
-    });
-    localSecretValues = await parser.getLocalSecretDict(envData, {
-      localOnly,
-      exclude,
-    });
+    localConfigMapValues = await parser.getLocalConfigMapDict(envData, { localOnly, exclude });
+    localSecretValues = await parser.getLocalSecretDict(envData, { localOnly, exclude });
+    if (!_.isEmpty(forceOverrideValues)) {
+      localConfigMapValues = _.assign(
+        localConfigMapValues,
+        _.pick(forceOverrideValues, _.keys(localConfigMapValues))
+      );
+      localSecretValues = _.assign(
+        localSecretValues,
+        _.pick(forceOverrideValues, _.keys(localSecretValues))
+      );
+    }
   } else {
-    // Create namespace if it doesn't exist
-    await k8s.createNamespace(namespace);
-
+    if (!options?.skipCreateNamespace) {
+      const isNamespaceExist = await k8s.namespaceExists(namespace);
+      if (!isNamespaceExist) {
+        await k8s.createNamespace(namespace);
+      }
+      // Create namespace if it doesn't exist
+    }
     // Config Map
     // Get remote values if they exist
     const remoteConfigMapValues = await k8s.getConfigMapData(configMapName, namespace);
@@ -131,12 +145,10 @@ export async function getDeployerValues(
         );
       }
       // Update the config map
-      await k8s.createOrPatchConfigMap(configMapName, namespace, localConfigMapValues, true);
+      await k8s.createOrPatchConfigMap(configMapName, namespace, localConfigMapValues);
     } else {
       // Get local values for config map
-      localConfigMapValues = await parser.getLocalConfigMapDict(envData, {
-        exclude,
-      });
+      localConfigMapValues = await parser.getLocalConfigMapDict(envData, { exclude });
       // We override only the setting key when the override values appear on argumensts or settings file
       if (!_.isEmpty(forceOverrideValues)) {
         localConfigMapValues = _.assign(
@@ -145,7 +157,7 @@ export async function getDeployerValues(
         );
       }
       // Create or patch the config map
-      await k8s.createOrPatchConfigMap(configMapName, namespace, localConfigMapValues, false);
+      await k8s.createOrPatchConfigMap(configMapName, namespace, localConfigMapValues);
     }
     // Secret
     // Get remote values if they exist
@@ -181,7 +193,7 @@ export async function getDeployerValues(
           _.pick(forceOverrideValues, _.keys(localSecretValues))
         );
       }
-      await k8s.createOrPatchSecret(secretName, namespace, localSecretValues, true);
+      await k8s.createOrPatchSecret(secretName, namespace, localSecretValues);
     } else {
       // Generate local values and update remote secret config
       localSecretValues = await parser.getLocalSecretDict(envData, { exclude });
@@ -193,7 +205,7 @@ export async function getDeployerValues(
         );
       }
       // Create or patch the secret
-      await k8s.createOrPatchSecret(secretName, namespace, localSecretValues, false);
+      await k8s.createOrPatchSecret(secretName, namespace, localSecretValues);
     }
   }
   // Return the merged values
@@ -215,9 +227,7 @@ export async function selectEnvironment(prompt = false, environment?: string): P
   // Get environments and settings
   const envs = parser.getEnvironments();
   if (envs.length === 0) {
-    cliOutput.error({
-      title: "No available environment files (assets/environments/<env>.json)",
-    });
+    cliOutput.error({ title: "No available environment files (assets/environments/<env>.json)" });
     system.terminateApp();
   }
   const settings = parser.getSettings();
@@ -244,7 +254,6 @@ export async function deploymentInfo(envData: IDeployer): Promise<void> {
   const table = new Table();
   const toGreen = cliOutput.colors.green;
   const deployerValues = await getDeployerValues(envData, { localOnly: true });
-
   table.push(
     { Environment: toGreen(parser.getSettings().ENVIRONMENT) },
     { Namespace: toGreen(deployerValues["NAMESPACE"]) },

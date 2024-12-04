@@ -34,6 +34,20 @@ export function prepareSettings(): void {
   }
 }
 
+export function prepareEnvVariables(): void {
+  const settings = getSettings();
+  process.env["ARGS_HELM"] = settings?.ARGS?.HELM ?? "";
+  process.env["ARGS_KUBECTL"] = settings?.ARGS?.KUBECTL ?? "";
+}
+
+export function getKubeCtlArgs(): string {
+  return process.env["ARGS_KUBECTL"] ?? "";
+}
+
+export function getHelmArgs(): string {
+  return process.env["ARGS_HELM"] ?? "";
+}
+
 // Function to merge array objects by key
 export function mergeArrayObjectByKey(
   target: any,
@@ -48,10 +62,11 @@ export function mergeArrayObjectByKey(
 
 // Function to merge environments
 export function mergeEnvironments(defaultEnv: IDeployer, selectedEnv: IDeployer): IDeployer {
+  const settings = getSettings();
   // Create a copy of the default environment
   const mergedEnvData = { ...defaultEnv };
   // Replace the namespace with the selected environment's namespace
-  mergedEnvData.namespace = selectedEnv.namespace;
+  mergedEnvData.namespace = settings.NAMESPACE || selectedEnv.namespace;
   // Replace the ConfigMap name with the selected environment's ConfigMap name, if it exists, otherwise use the default environment's ConfigMap name
   mergedEnvData.ConfigMap.name = selectedEnv.ConfigMap?.name ?? defaultEnv.ConfigMap?.name;
   // Replace the Secret name with the selected environment's Secret name, if it exists, otherwise use the default environment's Secret name
@@ -83,13 +98,20 @@ export function mergeEnvironments(defaultEnv: IDeployer, selectedEnv: IDeployer)
 
 // Function to get merged environment
 export function getMergedEnvironment(envName: string): IDeployer {
-  const selectedEnv = system.openJsonFile(`./assets/environment/${envName}.json`) as IDeployer;
+  let selectedEnv = system.openJsonFile(`./assets/environment/${envName}.json`) as IDeployer;
   // Open default environment file and selected environment file
-  const defaultEnv = selectedEnv.parent
-    ? (system.openJsonFile(`./assets/environment/${selectedEnv.parent}`) as IDeployer)
-    : selectedEnv;
-  // Merge the two environments
-  return mergeEnvironments(defaultEnv, selectedEnv);
+  let mergedEnv = selectedEnv;
+
+  // While a parent json exists, merge it
+  while (selectedEnv.parent) {
+    const parentEnv = system.openJsonFile(
+      `./assets/environment/${selectedEnv.parent}`
+    ) as IDeployer;
+    mergedEnv = mergeEnvironments(parentEnv, mergedEnv);
+    selectedEnv = parentEnv;
+  }
+
+  return mergedEnv;
 }
 
 // Function to parse environment data options
@@ -106,7 +128,7 @@ export async function parseEnvironmentDataOptions(
     const envValue = system.getEnv((obj?.env as string) ?? obj.key);
     // If the type is random or localOnly is true, generate a random string
     if (obj.type === DataTypeEnum.Random || (localOnly && obj.type === DataTypeEnum.Prompt)) {
-      value = envValue ?? system.getRandomStr(obj?.length);
+      value = envValue ?? system.getRandomStr(obj?.length, obj?.charset);
       // If the type is prompt, prompt the user for input
     } else if (obj.type === DataTypeEnum.Prompt) {
       value =
@@ -243,26 +265,31 @@ export async function getLocalChartsValues(
     prompt?: boolean;
     find?: string[];
     deployerValues?: IDict;
+    nsCreate?: boolean;
   }
 ): Promise<IChartsData[]> {
   // Create a copy of the environment data
   const envDataCopy = _.cloneDeep(envData);
   // Get the Charts data
   let charts: IChartsData[] = envDataCopy.Charts.data;
+  const settings = getSettings();
+  const defaultTemplateDirectory = settings.DEFAULT_TEMPLATE_PATH;
+  const exludeCharts: string[] = settings?.EXCLUDE ?? [];
   // Apply filters
-  charts =
-    (options?.group?.length ?? 0 > 0)
-      ? charts.filter(el => options?.group?.includes(el.group))
-      : charts;
-  charts =
-    (options?.name?.length ?? 0 > 0)
-      ? charts.filter(el => options?.name?.includes(el.name))
-      : charts;
-  charts =
-    (options?.find?.length ?? 0 > 0)
-      ? charts.filter(el => options?.find?.some(term => el.name.includes(term)))
-      : charts;
-
+  if (options?.group?.length ?? 0 > 0) {
+    charts = charts.filter(el => options?.group?.includes(el.group));
+  }
+  if (options?.name?.length ?? 0 > 0) {
+    charts = charts.filter(el => options?.name?.includes(el.name));
+  }
+  if (options?.find?.length ?? 0 > 0) {
+    charts = charts.filter(el => options?.find?.some(term => el.name.includes(term)));
+  }
+  if (exludeCharts.length > 0) {
+    charts = charts.filter(
+      el => !exludeCharts.some(exclude => el.name.toLowerCase() === exclude.toLowerCase())
+    );
+  }
   // If prompt is true, prompt the user to select releases
   if (options?.prompt ?? false) {
     const selectedChartNames = await system.promptMultipleChoise(
@@ -271,7 +298,6 @@ export async function getLocalChartsValues(
     );
     charts = charts.filter(el => selectedChartNames.includes(el.name));
   }
-  const defaultTemplateDirectory = getSettings().DEFAULT_TEMPLATE_PATH;
   // Loop through the charts
   for (const chart of charts) {
     chart.type = chart.path.includes("oci://")
@@ -289,10 +315,10 @@ export async function getLocalChartsValues(
     // Set the chart's priority, namespace, wait, debug, and completed properties
     chart.priority = _.get(envDataCopy, `Charts.priority.${chart?.group}`, 99);
     chart.namespace = chart?.namespace ?? envDataCopy.namespace;
+    chart.namespaceCreate = options?.nsCreate ?? false;
     chart.wait = chart?.wait ?? options?.wait ?? false;
     chart.waitForJobs = chart?.waitForJobs ?? options?.waitForJobs ?? false;
     chart.debug = chart?.debug ?? false;
-    chart.completed = undefined;
     chart.timeout = chart?.timeout ?? options?.timeout ?? "5m0s";
     // OCI or Remote chart path override
     const cachedPackage = `assets/charts/cache/${path.basename(chart.path)}-${chart?.version}.tgz`;
@@ -304,6 +330,7 @@ export async function getLocalChartsValues(
         ? system.getRenderedTemplate(chart.template, options.deployerValues)
         : undefined;
     }
+    chart.chartTemplateHash = system.getHash(JSON.stringify(chart));
   }
   // // Sort the charts by ascending priority
   return charts.sort((first, second) => {

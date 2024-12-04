@@ -1,6 +1,7 @@
 import { ExecSyncOptions, execSync, spawn } from "node:child_process";
 import { Readable } from "node:stream";
 
+import { getHelmArgs, getKubeCtlArgs } from "../../controllers/deployer";
 import {
   containsWord,
   pathExists,
@@ -8,6 +9,7 @@ import {
   pwd,
   replaceWholeWord,
 } from "../../controllers/system";
+import * as system from "../../controllers/system";
 import { getStrippedEnvironmentVariables, isDryRun, isVerbose } from "../utils";
 
 import { cliOutput } from "./output";
@@ -153,14 +155,27 @@ class Executor {
   private cmdReplaceWithLocalPackages(cmd: string): string {
     const packagesFolder = `${pwd()}/assets/packages`;
     const extention = platform() === "win32" ? ".exe" : "";
-    const replacedCmd = cmd.trim();
+    // remove duplicate spaces and trim
+    let replacedCmd = system.removeDuplicateSpaces(cmd);
     const localPackages = ["helm", "kubectl", "skopeo", "k3d"];
+    const helmArgs = getHelmArgs();
+    const kubectlArgs = getKubeCtlArgs();
     for (const localPackage of localPackages) {
       if (containsWord(cmd, localPackage)) {
         const localPackagePath = `${packagesFolder}/${localPackage}${extention}`;
-        return pathExists(localPackagePath)
+        replacedCmd = pathExists(localPackagePath)
           ? replaceWholeWord(localPackage, localPackagePath, replacedCmd)
           : replacedCmd;
+        // Add extra advanced arguments to helm commants
+        replacedCmd =
+          localPackage === "helm" && helmArgs
+            ? system.addStringAfterNthWord(replacedCmd, helmArgs, 2)
+            : replacedCmd;
+        // Add extra advanced arguments to kubectl commants
+        replacedCmd =
+          localPackage === "kubectl" && kubectlArgs
+            ? system.addStringAfterNthWord(replacedCmd, kubectlArgs, 2)
+            : replacedCmd;
       }
     }
     return replacedCmd;
