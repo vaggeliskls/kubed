@@ -1,16 +1,28 @@
-# Kubed - Kubernetes Deployer
+# Kubed - Simplify Kubernetes Deployments 🚀
 
-This tool is designed to streamline the process of deploying our products to Kubernetes clusters, making it simpler, more efficient, and hassle-free.
+Kubed is a powerful and user-friendly CLI tool designed to eliminate the complexity of Kubernetes deployments. Whether you're deploying Helm charts, transferring container images, or setting up a local Kubernetes cluster, Kubed makes it all incredibly simple.
 
-## 🔧 Building from Source - The Essentials
+By wrapping popular tools like Helm, kubectl, Skopeo, and k3d, Kubed allows you to focus on deploying and managing your applications without getting bogged down by configuration files or complex workflows.
 
-To build our tool from source, you need to have the following prerequisites in your system:
+## ✨ Features
 
-- [Node.js active LTS or maintenance LTS](https://nodejs.org/en/about/releases/) version is required. For information about specific version requirements, see the `engines` key in the `package.json` file.
+- 🚀 Streamlined Kubernetes Deployments: Deploy Helm charts and Kubernetes resources effortlessly across environments.
+- 🔍 Resource Monitoring Made Easy: Keep track of your resources without navigating endless configuration files.
+- 📦 Image Handling & Transfer: Easily manipulate and transfer container images.
+- 🛠️ Local Cluster Setup: Spin up local Kubernetes clusters in minutes.
+
+Kubed is designed for both beginners and experts, empowering you to deploy advanced Kubernetes setups in under 5 minutes. 🌟
+
+💡 Ready to simplify your Kubernetes journey? Give it a try today!
+
+## ⚙️ Prerequisites
+Ensure your system meets these requirements before building Kubed from source:
+
+[Node.js](https://nodejs.org/en/about/releases/) >= 18.19.1
 
 ## How to Deploy - Step by Step Instructions 🚀
 
-### 1️⃣ Install the Necessary Requirements
+### 1. Install dependencies
 
 This can be achieved through a simple npm command:
 
@@ -18,7 +30,7 @@ This can be achieved through a simple npm command:
 npm install
 ```
 
-### 2️⃣ Set Up required executables
+### 2. Prepere dependance CLIs
 
 You can prepare the required providers using:
 
@@ -26,7 +38,7 @@ You can prepare the required providers using:
 npm run start -- init --all
 ```
 
-### 3️⃣ Choose the Default Cluster
+### 3. Choose the Default Cluster
 
 Before starting your deployment, ensure that you have validated and chosen a Kubernetes cluster. Do this with
 
@@ -34,37 +46,10 @@ Before starting your deployment, ensure that you have validated and chosen a Kub
 npm run start -- config cluster
 ```
 
-### 4️⃣ Begin the Deployment Process
+### 4. Start CLI with options
 
 The command below runs the complete deployment procedure:
 
 ```shell
-npm run start -- deploy up
+npm run start -- 
 ```
-
-#### CLI Options For You to Consider 💡
-
-The deployer cli options: `npm run start -- <command> <sub-command ><option>`
-
-Commands:
-
-1. config
-2. deploy
-3. bundle
-4. packages
-   > All commands support --help option
-
-## Usage - How to Deploy 🛠
-
-Get executable
-
-- Config cluster `./kubed config cluster`
-- Run deployment `./kubed deploy up`
-
-> "Quick Tip": When running these deployment procedures, switch run start -- with the name of the executable ./kubed.
-
-# Additional References 📚
-
-- [AWS Setup EBS CSI Driver](https://blog.saeloun.com/2023/03/21/setup-ebs-csi-driver/)
-- [Setup EBS AWS Addon](https://docs.aws.amazon.com/eks/latest/userguide/managing-ebs-csi.html)
-- [Using Amazon ECR Images with Amazon EKS](https://docs.aws.amazon.com/AmazonECR/latest/userguide/ECR_on_EKS.html)
