@@ -20,7 +20,7 @@ Ensure your system meets these requirements before building Kubed from source:
 
 [Node.js](https://nodejs.org/en/about/releases/) >= 18.19.1
 
-## How to Deploy - Step by Step Instructions 🚀
+## 🚀 How to Deploy - Step by Step Instructions
 
 ### 1. Install dependencies
 
