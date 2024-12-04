@@ -1,0 +1,20 @@
+{
+  "namespace": "default",
+  "parent": "default.json",
+  "Settings": [],
+  "ConfigMap": {
+    "name": "kubed-global-config",
+    "data": []
+  },
+  "Secret": {
+    "name": "kubed-global-secret",
+    "data": []
+  },
+  "Charts": {
+    "priority": {
+      "service": 1,
+      "component": 2
+    },
+    "data": []
+  }
+}

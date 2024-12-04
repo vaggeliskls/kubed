@@ -8,4 +8,5 @@ node_modules/
 .configrc.json
 .application
 temp
-assets/
+assets/packages
+assets/s3-files
