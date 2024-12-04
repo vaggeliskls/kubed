@@ -1,4 +1,4 @@
-import { KUBED_DRY_RUN, KUBED_VERBOSE_LOGGING } from "../constants";
+import { KUBED_DRY_RUN, KUBED_VERBOSE_LOGGING, KUBED_DEBUG } from "../constants";
 
 export function isVerbose() {
   return process.env[KUBED_VERBOSE_LOGGING] === "true";
@@ -6,6 +6,10 @@ export function isVerbose() {
 
 export function isDryRun() {
   return process.env[KUBED_DRY_RUN] === "true";
+}
+
+export function isDebug() {
+  return process.env[KUBED_DEBUG] === "true";
 }
 
 export function getStrippedEnvironmentVariables() {

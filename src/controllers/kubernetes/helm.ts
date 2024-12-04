@@ -5,18 +5,8 @@ import { executor } from "../../shared/cli";
 import { IChartsData } from "../deployer";
 import * as system from "../system";
 
-// we add helm repositories that may not exist
-async function repositoryAdd(chart: IChartsData): Promise<void> {
-  if (chart?.remote && chart.type === "http" && !chart.cache) {
-    await executor.runCommandAsync(
-      `helm repo add ${chart.name} ${chart?.repository} --force-update`
-    );
-  }
-}
-
 // Deploy function to deploy a chart
 export async function deploy(chart: IChartsData): Promise<void> {
-  repositoryAdd(chart);
   const version = chart.version && chart.remote ? `--version ${chart?.version}` : "";
   // If chart has a template context, set configFile to "-f -", else set it to an empty string
   const configFile = chart.templateContext ? "-f -" : "";
@@ -28,10 +18,10 @@ export async function deploy(chart: IChartsData): Promise<void> {
   const timeout = chart.waitForJobs || chart.wait ? `--timeout ${chart.timeout}` : "";
   // If chart has debug flag, set dryRun to "--debug --dry-run", else set it to an empty string
   const dryRun = chart.debug ? "--debug --dry-run" : "";
+  // If chart has a namespaceCreate flag, set namespaceCreate to "--create-namespace", else set it to an empty string
+  const namespaceCreate = chart.namespaceCreate ? "--create-namespace" : "";
   // Set cmd to the helm upgrade command with the appropriate flags and chart details
-  const cmd = `helm upgrade --install --create-namespace ${dryRun} ${version} --namespace=${
-    chart.namespace
-  } ${wait} ${waitForJobs} ${timeout} ${chart.name} ${chart.cache || chart.path} ${configFile}`;
+  const cmd = `helm upgrade --install ${namespaceCreate} ${dryRun} ${version} --namespace=${chart.namespace} ${wait} ${waitForJobs} ${timeout} ${chart.name} ${chart.cache || chart.path} ${configFile}`;
   // Execute the command using the system module
   await executor.runCommandAsync(cmd, { input: chart.templateContext });
 }
@@ -41,18 +31,15 @@ export async function template(
   chart: IChartsData,
   options?: { output?: boolean }
 ): Promise<string> {
-  repositoryAdd(chart);
   const version = chart.version && chart.remote ? `--version ${chart?.version}` : "";
   // If chart has a template context, set configFile to "-f -", else set it to an empty string
   const configFile = chart.templateContext ? "-f -" : "";
   // If chart has debug flag, set dryRun to "--debug --dry-run", else set it to an empty string
   const dryRun = chart.debug ? "--debug --dry-run" : "";
   // Set outputDir to "--output-dir ./templates"
-  const outputDir = (options?.output ?? true) ? "--output-dir ./templates" : "";
+  const outputDir = options?.output ?? true ? "--output-dir ./templates" : "";
   // Set cmd to the helm template command with the appropriate flags and chart details
-  const cmd = `helm template ${chart.name} ${chart.cache || chart.path} --namespace=${
-    chart.namespace
-  } ${version} ${dryRun} ${outputDir} ${configFile}`;
+  const cmd = `helm template ${chart.name} ${chart.cache || chart.path} --namespace=${chart.namespace} ${version} ${dryRun} ${outputDir} ${configFile}`;
   // Execute the command using the system module
   return await executor.runCommandAsync(cmd, {
     input: chart.templateContext,
@@ -81,7 +68,6 @@ export async function update(chart: IChartsData): Promise<void> {
 
 // Lint function to check chart syntax
 export async function lint(chart: IChartsData): Promise<void> {
-  repositoryAdd(chart);
   // If chart has a template context, set configFile to "-f -", else set it to an empty string
   const configFile = chart.templateContext ? "-f -" : "";
   // Set cmd to the helm lint command with the appropriate flags and chart path

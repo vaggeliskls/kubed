@@ -77,12 +77,7 @@ export function systemDetails(): {
     selectedOs = "linux";
   }
   const selectedArch: "arm64" | "amd64" = arch === "arm" || arch === "arm64" ? "arm64" : "amd64";
-  return {
-    os: selectedOs,
-    arch: selectedArch,
-    extention: seletedExtention,
-    chmod: selectionChmod,
-  };
+  return { os: selectedOs, arch: selectedArch, extention: seletedExtention, chmod: selectionChmod };
 }
 
 export async function preparePrerequisites(
@@ -120,7 +115,7 @@ export async function preparePrerequisites(
       name: `skopeo (${selectedOs}-${selectedArch})`,
       asyncFunc: () =>
         system.downloadFile(
-          `https://github.com/vaggeliskls/skopeo/releases/download/${settings?.PACKAGES?.SKOPEO}/skopeo.${selectedOs}.${selectedArch}${extention}`,
+          `https://github.com/vaggelis/skopeo/releases/download/${settings?.PACKAGES?.SKOPEO}/skopeo.${selectedOs}.${selectedArch}${extention}`,
           `${packagesFolder}/skopeo${extention}`
         ),
     },

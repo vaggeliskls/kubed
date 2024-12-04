@@ -1,8 +1,8 @@
 import { Command } from "commander";
 
-import { cliOutput, executor } from "../../shared/cli";
-import { actionRunner } from "../../shared/errors";
-import * as system from "../system";
+import { cliOutput, executor } from "../../../shared/cli";
+import { actionRunner } from "../../../shared/errors";
+import * as system from "../../system";
 
 export function k8sIngressClassCli(): Command {
   // DEPLOY

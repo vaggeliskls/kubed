@@ -1,2 +1,3 @@
 export const KUBED_DRY_RUN = "KUBED_DRY_RUN";
 export const KUBED_VERBOSE_LOGGING = "KUBED_VERBOSE_LOGGING";
+export const KUBED_DEBUG = "KUBED_DEBUG";

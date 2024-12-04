@@ -29,14 +29,5 @@ export function initCli(): Command {
       })
     );
 
-  initCli
-    .command("info")
-    .description("Display packages information")
-    .action(
-      actionRunner(async () => {
-        await deployer.printPackagesInfo();
-      })
-    );
-
   return initCli;
 }

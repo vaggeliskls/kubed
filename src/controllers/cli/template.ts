@@ -2,6 +2,7 @@ import { Command } from "commander";
 
 import { cliOutput } from "../../shared/cli";
 import { actionRunner } from "../../shared/errors";
+import { isDebug } from "../../shared/utils";
 import * as deployer from "../deployer";
 import * as k8s from "../kubernetes";
 import * as system from "../system";
@@ -22,6 +23,12 @@ export function templateCli(): Command {
         const envData = deployer.getMergedEnvironment(selectedEnv);
         deployer.deploymentInfo(envData);
         const deployerValues = await deployer.getDeployerValues(envData, { localOnly: true });
+        if (isDebug()) {
+          cliOutput.log({
+            title: "Deployer Values",
+            bodyLines: [JSON.stringify(deployerValues, null, 2)],
+          });
+        }
         // Get local charts values
         const charts = await deployer.getLocalChartsValues(envData, {
           find: options?.filter,
