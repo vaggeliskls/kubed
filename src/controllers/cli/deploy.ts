@@ -2,6 +2,7 @@ import { Command } from "commander";
 
 import { cliOutput } from "../../shared/cli";
 import { actionRunner } from "../../shared/errors";
+import { isDebug } from "../../shared/utils";
 import * as deployer from "../deployer";
 import * as k8s from "../kubernetes";
 import * as system from "../system";
@@ -18,6 +19,10 @@ export function deployCli(): Command {
     .option("--change-env", "Change environment selection", false)
     .option("-w, --wait", "Waits until all Pods are in a ready state", false)
     .option("-j, --wait-for-jobs", "Wait until all Jobs have been completed", false)
+    .option("--skip-create-namespace", "Skip the creating of the namespace", false)
+    .option("--ns-create", "Create individual namespaces of charts", false)
+    .option("--state-reset", "Reset deployment state", false)
+    .option("--state-skip", "Skip deployment state", false)
     .option("-t, --timeout", "Time to wait for any individual Kubernetes operation", "5m0s")
     .option("-s, --select", "Select releases", false)
     .option("-f, --filter [text...]", "Filter releases by text")
@@ -32,7 +37,14 @@ export function deployCli(): Command {
         const deployerValues = await deployer.getDeployerValues(envData, {
           exclude: options?.exclude,
           override: options?.override,
+          skipCreateNamespace: options?.skipCreateNamespace,
         });
+        if (isDebug()) {
+          cliOutput.log({
+            title: "Deployer Values",
+            bodyLines: [JSON.stringify(deployerValues, null, 2)],
+          });
+        }
         // Get local charts values
         const charts = await deployer.getLocalChartsValues(envData, {
           find: options?.filter,
@@ -42,10 +54,21 @@ export function deployCli(): Command {
           waitForJobs: options?.waitForJobs,
           timeout: options?.timeout,
           deployerValues,
+          nsCreate: options?.nsCreate,
         });
+        // filter by state
+        if (options?.stateReset) {
+          await deployer.resetState();
+        }
+        const chartByState = await deployer.getChartsByState(charts, options?.stateSkip);
         await deployer.runHelmDeployTaskList(charts);
-
-        cliOutput.success({ title: "The deployment completed" });
+        if (charts.length === 0 && chartByState.length === 0) {
+          cliOutput.warn({ title: "No charts selected for deployment" });
+        } else if (charts.length > 0 && chartByState.length === 0) {
+          cliOutput.warn({ title: "Charts are already deployed" });
+        } else {
+          cliOutput.success({ title: "Charts have been deployed successfully" });
+        }
       })
     );
 
@@ -55,8 +78,6 @@ export function deployCli(): Command {
     .option("--env <text>", "Force environment by name")
     .option("--change-env", "Change environment selection", false)
     .option("--all", "Delete the namespace", false)
-    .option("--force", "Force the deletion of all remaining elements", false)
-    .option("--pvc", "Destroy unused persistent volumes", false)
     .option("-f, --filter [text...]", "Filter releases by text")
     .action(
       actionRunner(async (options: any) => {
@@ -68,15 +89,10 @@ export function deployCli(): Command {
             `Are you sure about about deleting namespace: ${envData.namespace}`
           );
           await k8s.deleteNamespace(envData.namespace);
-          if (options?.force) {
-            const pods = await k8s.getAllRunningPods(envData.namespace);
-            for (const pod of pods) {
-              await k8s.podDelete(envData.namespace, pod, true);
-            }
+          const pods = await k8s.getPodsNames(envData.namespace);
+          for (const pod of pods) {
+            await k8s.podDelete(pod, envData.namespace);
           }
-        } else if (options?.pvc) {
-          const pvcs = await k8s.getPVCNames(envData.namespace);
-          await k8s.deletePersistentVolumeClaims(envData.namespace, pvcs);
         } else {
           const releases = await k8s.getRemoteReleases(envData.namespace);
           if (releases.length === 0) {
