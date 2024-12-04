@@ -128,9 +128,6 @@ export async function preparePrerequisites(
         ),
     },
   ];
-  console.log(
-    `https://github.com/vaggeliskls/skopeo/releases/download/${settings?.PACKAGES?.SKOPEO}/skopeo.${selectedOs}.${selectedArch}${extention}`
-  );
   const tasks = all ? prerequisites.concat(offlinePrerequisites) : prerequisites;
   await deployer.runTasks(tasks, "Download Prerequisites");
   // helm exteract and prepare
