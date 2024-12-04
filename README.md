@@ -48,10 +48,10 @@ npm run start -- config cluster
 
 ### 4. Start CLI with options
 
-The command below runs the complete deployment procedure:
+The command below display all available commands and options:
 
 ```shell
-npm run start -- 
+npm run start -- --help
 ```
 
 ## 📚 References
