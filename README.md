@@ -2,7 +2,7 @@
 
 Kubed is a powerful and user-friendly CLI tool designed to eliminate the complexity of Kubernetes deployments. Whether you're deploying Helm charts, transferring container images, or setting up a local Kubernetes cluster, Kubed makes it all incredibly simple.
 
-By wrapping popular tools like Helm, kubectl, Skopeo, and k3d, Kubed allows you to focus on deploying and managing your applications without getting bogged down by configuration files or complex workflows.
+By wrapping popular tools like [Helm](https://helm.sh/), [Kubectl](https://kubernetes.io/docs/tasks/tools/#kubectl), [Skopeo](https://github.com/containers/skopeo), and [k3d](https://k3d.io/), Kubed allows you to focus on deploying and managing your applications without getting bogged down by configuration files or complex workflows.
 
 ## ✨ Features
 
@@ -53,3 +53,9 @@ The command below runs the complete deployment procedure:
 ```shell
 npm run start -- 
 ```
+
+# 📚 References
+- [Kubectl](https://kubernetes.io/docs/tasks/tools/#kubectl): Command-line tool for controlling Kubernetes clusters.
+- [Helm](https://helm.sh/): The Kubernetes package manager for managing charts and applications.
+- [Skopeo](https://github.com/containers/skopeo): A tool for inspecting, copying, and signing container images.
+- [k3d](https://k3d.io/): Lightweight Kubernetes clusters in Docker for local development.
