@@ -219,7 +219,7 @@ export async function extractTarFile(
 ): Promise<void> {
   if (pathExists(path)) {
     createFolder(outputPath);
-    const strip = options?.strip ?? false ? "--strip-components=1" : "";
+    const strip = (options?.strip ?? false) ? "--strip-components=1" : "";
     const cmdFilter = (options?.exclude ?? [])
       .map((filter: string) => `--exclude=${filter}`)
       .join(" ");

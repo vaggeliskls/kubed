@@ -37,7 +37,7 @@ export async function template(
   // If chart has debug flag, set dryRun to "--debug --dry-run", else set it to an empty string
   const dryRun = chart.debug ? "--debug --dry-run" : "";
   // Set outputDir to "--output-dir ./templates"
-  const outputDir = options?.output ?? true ? "--output-dir ./templates" : "";
+  const outputDir = (options?.output ?? true) ? "--output-dir ./templates" : "";
   // Set cmd to the helm template command with the appropriate flags and chart details
   const cmd = `helm template ${chart.name} ${chart.cache || chart.path} --namespace=${chart.namespace} ${version} ${dryRun} ${outputDir} ${configFile}`;
   // Execute the command using the system module

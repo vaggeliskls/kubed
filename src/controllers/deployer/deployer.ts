@@ -62,7 +62,7 @@ export async function getDeployerValues(
     skipCreateNamespace?: boolean;
   }
 ): Promise<IDict> {
-  const localOnly = isDryRun() ? true : options?.localOnly ?? false;
+  const localOnly = isDryRun() ? true : (options?.localOnly ?? false);
   // We exlude properties eather with command args or settings file
   const exclude = _.union(options?.exclude ?? [], parser.getSettings()?.EXCLUDE ?? []);
   const settingsOverride = parser.getSettings()?.OVERRIDE;
@@ -103,7 +103,6 @@ export async function getDeployerValues(
         _.pick(forceOverrideValues, _.keys(localSecretValues))
       );
     }
-    
   } else {
     if (!options?.skipCreateNamespace) {
       const isNamespaceExist = await k8s.namespaceExists(namespace);
