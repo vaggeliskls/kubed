@@ -54,7 +54,7 @@ The command below runs the complete deployment procedure:
 npm run start -- 
 ```
 
-# 📚 References
+## 📚 References
 - [Kubectl](https://kubernetes.io/docs/tasks/tools/#kubectl): Command-line tool for controlling Kubernetes clusters.
 - [Helm](https://helm.sh/): The Kubernetes package manager for managing charts and applications.
 - [Skopeo](https://github.com/containers/skopeo): A tool for inspecting, copying, and signing container images.
