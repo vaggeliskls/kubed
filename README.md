@@ -19,7 +19,7 @@ Kubed is designed for both beginners and experts, empowering you to deploy advan
 
 Ensure your system meets these requirements before building Kubed from source:
 
-[Node.js](https://nodejs.org/en/about/releases/) >= 18.19.1
+[Node.js](https://nodejs.org/en/about/releases/) >= 18.20.5
 
 ## 🚀 How to Deploy - Step by Step Instructions
 
