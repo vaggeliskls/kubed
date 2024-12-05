@@ -7,10 +7,8 @@ import * as k8s from "../kubernetes";
 
 export function updateCli(): Command {
   const updateCli = new Command();
-  updateCli.name("update").description("Update helm packages");
-
   updateCli
-    .command("dependencies")
+    .name("update")
     .description("Update dependencies of charts")
     .option("--env <text>", "Force environment by name")
     .option("--change-env", "Change environment selection", false)
