@@ -10,7 +10,7 @@
     "node": ">=18.20.5"
   },
   "scripts": {
-    "prepare": "husky install",
+    "prepare": "npx simple-git-hooks",
     "clean": "rimraf dist/",
     "build": "npm run clean && tsc",
     "build:ncc": "npm run clean && ncc build ./src/index.ts --target es2020 -a -m -o dist",
