@@ -77,55 +77,64 @@ export function deployCli(): Command {
     .description("Destroy kubernetes instances")
     .option("--env <text>", "Force environment by name")
     .option("--change-env", "Change environment selection", false)
-    .option("--all", "Delete the namespace", false)
+    .option("--all", "Delete all deployments", false)
+    .option("--ns", "Delete the namespace", false)
     .option("-f, --filter [text...]", "Filter releases by text")
     .action(
       actionRunner(async (options: any) => {
         const selectedEnv = await deployer.selectEnvironment(options.changeEnv, options?.env);
         const envData = deployer.getMergedEnvironment(selectedEnv);
         deployer.deploymentInfo(envData);
-        if (options?.all) {
-          await system.promptContinue(
-            `Are you sure about about deleting namespace: ${envData.namespace}`
-          );
+        // Delete namespace and force delete all pods to prevent terminating pods
+        if (options?.ns) {
+          await system.promptContinue(`Are you sure about the of ${envData.namespace} namespace`);
           await k8s.deleteNamespace(envData.namespace);
           const pods = await k8s.getPodsNames(envData.namespace);
           for (const pod of pods) {
             await k8s.podDelete(pod, envData.namespace);
           }
-        } else {
-          const releases = await k8s.getRemoteReleases(envData.namespace);
-          if (releases.length === 0) {
-            cliOutput.error({ title: "No available helm releases" });
-            system.terminateApp();
-          }
-          let selectedReleases: string[];
-          if (options?.filter) {
-            selectedReleases = releases.filter((release: string) =>
-              (options?.filter as string[]).some((term: string) => term.includes(release))
-            );
-          } else {
-            selectedReleases = await system.promptMultipleChoise(
-              "Select online releases",
-              releases
-            );
-          }
           cliOutput.success({
-            title: `Selected releases (${selectedReleases.length}): ${selectedReleases.join()}`,
+            title: `Successfully deleted namespace: ${envData.namespace}`,
           });
-          await system.promptContinue("Are you sure about the deletion of the selected releases");
-          await deployer.runTasks(
-            selectedReleases.map((release: string) => {
-              return {
-                name: release,
-                asyncFunc: () =>
-                  k8s.uninstall({ name: release, namespace: envData.namespace } as any),
-              };
-            }),
-            "Helm uninstall releases"
+          system.terminateApp();
+        }
+        let releases = await k8s.getRemoteReleases(envData.namespace);
+        if (releases.length === 0) {
+          cliOutput.error({ title: "No available helm releases" });
+          system.terminateApp();
+        }
+
+        if (options?.filter) {
+          releases = releases.filter((release: string) =>
+            (options?.filter as string[]).some((term: string) => release.includes(term))
           );
         }
 
+        if (releases.length === 0) {
+          cliOutput.warn({
+            title: "No releases found",
+          });
+        }
+
+        const selectedReleases =
+          options?.filter || options?.all
+            ? releases
+            : await system.promptMultipleChoise("Select online releases", releases);
+        cliOutput.success({
+          title: `Selected releases (${selectedReleases.length}): ${selectedReleases.join()}`,
+        });
+        await system.promptContinue("Are you sure about the deletion of the selected releases");
+
+        await deployer.runTasks(
+          selectedReleases.map((release: string) => {
+            return {
+              name: release,
+              asyncFunc: () =>
+                k8s.uninstall({ name: release, namespace: envData.namespace } as any),
+            };
+          }),
+          "Helm uninstall releases"
+        );
         cliOutput.success({ title: "The delete operation completed" });
       })
     );

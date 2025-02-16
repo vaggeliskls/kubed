@@ -33,6 +33,7 @@ export class SettingFile {
   };
   OVERRIDE = {};
   EXCLUDE = [];
+  EXTRA_CHARTS = [];
 }
 
 export class Chart {

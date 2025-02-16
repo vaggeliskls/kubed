@@ -272,9 +272,19 @@ export async function getLocalChartsValues(
   const envDataCopy = _.cloneDeep(envData);
   // Get the Charts data
   let charts: IChartsData[] = envDataCopy.Charts.data;
+
   const settings = getSettings();
   const defaultTemplateDirectory = settings.DEFAULT_TEMPLATE_PATH;
   const exludeCharts: string[] = settings?.EXCLUDE ?? [];
+
+  // We add extra charts if they exist
+  const extraImportedCharts = settings?.EXTRA_CHARTS ?? [];
+  charts.push(
+    ...extraImportedCharts.filter(
+      (extraChart: IChartsData) =>
+        !charts.some((chart: IChartsData) => extraChart.name === chart.name)
+    )
+  );
   // Apply filters
   if (options?.group?.length ?? 0 > 0) {
     charts = charts.filter(el => options?.group?.includes(el.group));

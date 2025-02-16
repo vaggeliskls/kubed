@@ -105,11 +105,11 @@ export async function getDeployerValues(
     }
   } else {
     if (!options?.skipCreateNamespace) {
-      const isNamespaceExist = await k8s.namespaceExists(namespace);
+      // Create namespace if it doesn't exist
+      const isNamespaceExist = await k8s.isNamespaceExist(namespace);
       if (!isNamespaceExist) {
         await k8s.createNamespace(namespace);
       }
-      // Create namespace if it doesn't exist
     }
     // Config Map
     // Get remote values if they exist
