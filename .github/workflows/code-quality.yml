@@ -11,7 +11,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  NODE_JS_VERSION: 18.20.5
+  NODE_JS_VERSION: 20.11.1
 
 jobs:
   linting:
