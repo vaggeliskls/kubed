@@ -10,7 +10,7 @@
     "node": ">=18.20.5"
   },
   "scripts": {
-    "prepare": "npx simple-git-hooks",
+    "prepare": "simple-git-hooks",
     "clean": "rimraf dist/",
     "build": "npm run clean && tsc",
     "build:ncc": "npm run clean && ncc build ./src/index.ts --target es2020 -a -m -o dist",
@@ -34,6 +34,11 @@
     "package:darwin:amd64:offline": "npm run package -- --os darwin:amd64 --with-deps",
     "package:darwin:arm64:offline": "npm run package -- --os darwin:arm64 --with-deps",
     "package:windows:amd64:offline": "npm run package -- --os windows:amd64 --with-deps"
+  },
+  "simple-git-hooks": {
+    "commit-msg": "npx --no-install commitlint --edit $1",
+    "pre-commit": "npm run format:check && npm run lint && npm run test",
+    "preserveUnused": false
   },
   "dependencies": {
     "@kubernetes/client-node": "^0.21.0",

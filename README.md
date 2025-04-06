@@ -61,3 +61,4 @@ npm run start -- --help
 - [Helm](https://helm.sh/): The Kubernetes package manager for managing charts and applications.
 - [Skopeo](https://github.com/containers/skopeo): A tool for inspecting, copying, and signing container images.
 - [k3d](https://k3d.io/): Lightweight Kubernetes clusters in Docker for local development.
+- [husk migration](https://github.com/toplenboren/simple-git-hooks?tab=readme-ov-file#when-migrating-from-husky-git-hooks-are-not-running): when hooks dont work when migrating from husky
