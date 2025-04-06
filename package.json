@@ -1,7 +1,7 @@
 {
   "name": "kubed",
   "version": "1.0.0",
-  "description": "Kubernetes automatic deployer.",
+  "description": "Kubernetes automatic deployer",
   "main": "index.js",
   "bin": "dist/index.js",
   "exports": "./dist/index.js",
