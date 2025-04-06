@@ -4,7 +4,7 @@ import { join } from "node:path";
 class PackageJsonManager {
   private readonly packageJsonPath = join(process.cwd(), "package.json");
 
-  private get packageJson(): Record<string, unknown> {
+  private get packageJson(): any {
     return JSON.parse(readFileSync(this.packageJsonPath).toString());
   }
 
