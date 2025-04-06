@@ -16,9 +16,10 @@ Kubed is designed for both beginners and experts, empowering you to deploy advan
 💡 Ready to simplify your Kubernetes journey? Give it a try today!
 
 ## ⚙️ Prerequisites
+
 Ensure your system meets these requirements before building Kubed from source:
 
-[Node.js](https://nodejs.org/en/about/releases/) >= 18.19.1
+[Node.js](https://nodejs.org/en/about/releases/) >= 18.20.5
 
 ## 🚀 How to Deploy - Step by Step Instructions
 
@@ -55,7 +56,9 @@ npm run start -- --help
 ```
 
 ## 📚 References
+
 - [Kubectl](https://kubernetes.io/docs/tasks/tools/#kubectl): Command-line tool for controlling Kubernetes clusters.
 - [Helm](https://helm.sh/): The Kubernetes package manager for managing charts and applications.
 - [Skopeo](https://github.com/containers/skopeo): A tool for inspecting, copying, and signing container images.
 - [k3d](https://k3d.io/): Lightweight Kubernetes clusters in Docker for local development.
+- [husk migration](https://github.com/toplenboren/simple-git-hooks?tab=readme-ov-file#when-migrating-from-husky-git-hooks-are-not-running): when hooks dont work when migrating from husky

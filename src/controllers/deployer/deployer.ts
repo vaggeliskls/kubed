@@ -258,7 +258,7 @@ export async function deploymentInfo(envData: IDeployer): Promise<void> {
     { Environment: toGreen(parser.getSettings().ENVIRONMENT) },
     { Namespace: toGreen(deployerValues["NAMESPACE"]) },
     { Cluster: toGreen(k8s.getDefaultClusterContext()) },
-    { Registry: toGreen(deployerValues["REGISTRY"]) },
+    { Registry: toGreen(deployerValues["REGISTRY"] ?? "N/A") },
     { Charts: toGreen(envData.Charts.data.length) },
     { System: toGreen(`${system.platform()}(${system.arch()})`) }
   );

@@ -2,7 +2,7 @@
   "ts-node": {
     "files": true,
     "esm": false,
-    "swc": true
+    "swc": false
   },
   "compilerOptions": {
     "baseUrl": ".",

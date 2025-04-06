@@ -1,4 +1,4 @@
-import chalk from "chalk";
+import * as colorette from "colorette";
 import { EOL } from "node:os";
 import * as readline from "node:readline";
 
@@ -11,13 +11,13 @@ interface CLIMessageConfig {
 }
 
 interface CLIColors {
-  magenta: chalk.Chalk;
-  cyan: chalk.Chalk;
-  gray: chalk.Chalk;
-  green: chalk.Chalk;
-  red: chalk.Chalk;
-  white: chalk.Chalk;
-  yellow: chalk.Chalk;
+  magenta: colorette.Color;
+  cyan: colorette.Color;
+  gray: colorette.Color;
+  green: colorette.Color;
+  red: colorette.Color;
+  white: colorette.Color;
+  yellow: colorette.Color;
 }
 
 type CLIColor = keyof CLIColors;
@@ -31,18 +31,18 @@ class CLIOutput {
    * more fine-grained control of message bodies are still using a centralized implementation.
    */
   readonly colors: CLIColors = {
-    magenta: chalk.magenta,
-    cyan: chalk.cyan,
-    gray: chalk.gray,
-    green: chalk.green,
-    red: chalk.red,
-    white: chalk.white,
-    yellow: chalk.yellow,
+    magenta: colorette.magenta,
+    cyan: colorette.cyan,
+    gray: colorette.gray,
+    green: colorette.green,
+    red: colorette.red,
+    white: colorette.white,
+    yellow: colorette.yellow,
   };
 
-  readonly bold = chalk.bold;
-  readonly underline = chalk.underline;
-  readonly dim = chalk.dim;
+  readonly bold = colorette.bold;
+  readonly underline = colorette.underline;
+  readonly dim = colorette.dim;
 
   readonly SUCCESS_SYMBOL = SUCCESS_SYMBOL;
   readonly START_SYMBOL = START_SYMBOL;
@@ -70,7 +70,7 @@ class CLIOutput {
   }
 
   applyPrefix(color: CLIColor = "magenta", text: string): string {
-    const prefix = `${chalk[color](">")} ${chalk.reset.inverse.bold[color](` ${this.cliName} `)}`;
+    const prefix = `${colorette[color](">")} ${colorette.inverse(colorette.bold(colorette[color](` ${this.cliName} `)))}`;
     return `${prefix}  ${text}`;
   }
 
@@ -97,7 +97,7 @@ class CLIOutput {
 
     this.writeOutputTitle({
       color: "magenta",
-      title: color ? chalk[color](title) : title,
+      title: color ? colorette[color](title) : title,
     });
 
     this.writeOptionalOutputBody(bodyLines);
@@ -109,7 +109,7 @@ class CLIOutput {
 
     this.writeOutputTitle({
       color: "red",
-      title: chalk.red(title),
+      title: colorette.red(title),
     });
 
     this.writeOptionalOutputBody(bodyLines);
@@ -121,7 +121,7 @@ class CLIOutput {
 
     this.writeOutputTitle({
       color: "yellow",
-      title: chalk.yellow(title),
+      title: colorette.yellow(title),
     });
 
     this.writeOptionalOutputBody(bodyLines);
@@ -133,7 +133,7 @@ class CLIOutput {
 
     this.writeOutputTitle({
       color: "gray",
-      title: chalk.gray(title),
+      title: colorette.gray(title),
     });
 
     this.writeOptionalOutputBody(bodyLines);
@@ -145,7 +145,7 @@ class CLIOutput {
 
     this.writeOutputTitle({
       color: "green",
-      title: chalk.green(title),
+      title: colorette.green(title),
     });
 
     this.writeOptionalOutputBody(bodyLines);
@@ -182,7 +182,7 @@ class CLIOutput {
   }
 
   private getVerticalSeparator(color: CLIColor): string {
-    return `${this.X_PADDING}${chalk.dim[color](this.VERTICAL_SEPARATOR)}`;
+    return `${this.X_PADDING}${colorette.dim(colorette[color](this.VERTICAL_SEPARATOR))}`;
   }
 }
 
