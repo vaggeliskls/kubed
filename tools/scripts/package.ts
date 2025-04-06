@@ -39,9 +39,9 @@ function parseOs(): { name: string; arch: string } {
 }
 
 async function packageApp(os: string, arch: string, isOffline: boolean): Promise<string> {
-  const osMap: any = { linux: "linuxstatic", darwin: "macos", windows: "win" };
-  const archMap: any = { amd64: "x64", arm64: "arm64" };
-
+  type OsMap = { [key: string]: string };
+  const osMap: OsMap = { linux: "linuxstatic", darwin: "macos", windows: "win" };
+  const archMap: { [key: string]: string } = { amd64: "x64", arm64: "arm64" };
   const appVersion = process.env["APP_VERSION"] || packageJson.getVersion();
   const appNamePrefix = process.env["APP_NAME"] || "kubed";
   const offlineMarker = isOffline ? "-offline" : "";
