@@ -6,7 +6,9 @@ import * as k8s from "../kubernetes";
 
 import { IChartsData } from "./environment.model";
 
-export interface Ctx {}
+export interface Ctx {
+  exitOnError: boolean;
+}
 
 export async function runHelmDeployTaskList(charts: IChartsData[]): Promise<void> {
   cliOutput.log({ title: "Helm Releases Execution" });

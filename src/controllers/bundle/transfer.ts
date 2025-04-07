@@ -23,7 +23,7 @@ export async function transferImages(
     imagesDetails.push(system.dockerImageProcess(image));
   }
   // Authentication Section
-  if (!options?.skipConfigure ?? true) {
+  if (options?.skipConfigure ? false : true) {
     cliOutput.log({ title: "Authenticate source registry" });
     await executor.runCommandAsync("aws configure", { stdio: "inherit" });
     // On linux: aws ecr get-login-password --region eu-west-2 | skopeo login --username AWS --password-stdin ${registry}
@@ -38,7 +38,7 @@ export async function transferImages(
   // Extract details from aws dest ex. 400864493915.dkr.ecr.eu-west-2.amazonaws.com
   const region = dest.split(".")[3] ?? ""; // eu-west-2
   const registryID = dest.split(".")[0] ?? ""; // 400864493915
-  if (options?.destAuth === "ecr" && (!options?.skipConfigure ?? true)) {
+  if (options?.destAuth === "ecr" && (options?.skipConfigure ? false : true)) {
     cliOutput.log({ title: "Authenticate destination registry" });
     await executor.runCommandAsync("aws configure", { stdio: "inherit" });
     const token = await executor.runCommandAsync(`aws ecr get-login-password --region ${region}`);

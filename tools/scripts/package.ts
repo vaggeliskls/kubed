@@ -26,9 +26,9 @@ function parseOs(): { name: string; arch: string } {
 
     const [name, arch] = os.split(":");
     return { name, arch };
-  } catch (error) {
+  } catch (error: any) {
     cliOutput.error({
-      title: error.message,
+      title: error?.message,
       bodyLines: [
         `Example: ${OS_FLAG}=${SUPPORTED_OS[0]}`,
         `Supported OS: ${SUPPORTED_OS.map(os => `\n${cliOutput.X_PADDING}- ${os}`)}`,
@@ -39,11 +39,11 @@ function parseOs(): { name: string; arch: string } {
 }
 
 async function packageApp(os: string, arch: string, isOffline: boolean): Promise<string> {
-  const osMap = { linux: "linuxstatic", darwin: "macos", windows: "win" };
-  const archMap = { amd64: "x64", arm64: "arm64" };
-
-  const appVersion = process.env.APP_VERSION || packageJson.getVersion();
-  const appNamePrefix = process.env.APP_NAME || "kubed";
+  type OsMap = { [key: string]: string };
+  const osMap: OsMap = { linux: "linuxstatic", darwin: "macos", windows: "win" };
+  const archMap: { [key: string]: string } = { amd64: "x64", arm64: "arm64" };
+  const appVersion = process.env["APP_VERSION"] || packageJson.getVersion();
+  const appNamePrefix = process.env["APP_NAME"] || "kubed";
   const offlineMarker = isOffline ? "-offline" : "";
   const extension = os === "windows" ? ".exe" : "";
   // e.g kubed-1.0.0-linux-x64 or kubed-1.0.0-linux-x64-offline

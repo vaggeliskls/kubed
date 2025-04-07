@@ -32,7 +32,7 @@ export function getPackagedLogoText(): string {
 
 // Function to print the deployer logo
 export function printDeployerLogo(): void {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  // eslint-disable-next-line
   const logo = require("asciiart-logo");
   let deployerLogo = logo({
     name: getPackagedAppName(),
