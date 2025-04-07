@@ -3,6 +3,9 @@ import eslint from "@eslint/js";
 import jestPlugin from "eslint-plugin-jest";
 import tseslint from "typescript-eslint";
 
+import genericRules from "./tools/eslint/generic-rules";
+import typescriptRules from "./tools/eslint/typescript-rules";
+
 export default tseslint.config(
   {
     ignores: ["**/assets/**", "**/bin/**", "**/dist/**", "**/node_modules/**"],
@@ -20,14 +23,12 @@ export default tseslint.config(
         allowDefaultProject: true,
       },
     },
+    extends: [],
     ignores: ["src/**/*.spec.ts", "src/**/*.test.ts"],
     files: ["./src/**/*.ts", "./src/**/*.tsx"],
-    rules: {
-      "no-console": "error",
-      "no-unused-vars": "off",
-      "no-undef": "off",
-    },
   },
+  genericRules,
+  typescriptRules,
   {
     // disable type-aware linting on JS files
     files: ["**/*.js"],

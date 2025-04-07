@@ -8,6 +8,7 @@
     "baseUrl": ".",
     "allowSyntheticDefaultImports": true,
     "declaration": true,
+    "isolatedModules": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "incremental": false,
