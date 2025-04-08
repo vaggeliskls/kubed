@@ -1,11 +1,11 @@
 import * as k8s from "@kubernetes/client-node";
 import path from "path";
 
-import { cliOutput } from "../../shared/cli";
-import { IDict } from "../deployer";
-import * as kubectl from "../kubernetes/kubectl";
-import { terminateApp, getHomeDirectory } from "../system";
-import * as system from "../system";
+import { cliOutput } from "../../shared/cli/output.js";
+import { IDict } from "../deployer/environment.model.js";
+import * as kubectl from "../kubernetes/kubectl.js";
+import { terminateApp, getHomeDirectory } from "../system/system.js";
+import * as system from "../system/system.js";
 
 enum StatusMessageEnum {
   Conflict = 409,
@@ -35,14 +35,15 @@ export async function readNamespaceStatus(
   name: string
 ): Promise<"Active" | "Terminating" | undefined> {
   try {
-    const k8sApi = getApiClient();
-    const response = await k8sApi.readNamespaceStatus(name);
-    return response?.body?.status?.phase as any;
+    // const k8sApi = getApiClient();
+    // const response = await k8sApi.readNamespaceStatus(name);
+    // return response?.body?.status?.phase as any;
+    return undefined;
   } catch (err: any) {
-    const error = err as k8s.Response;
-    if (error?.statusCode !== StatusMessageEnum.NotFound) {
-      throw new Error(error?.statusMessage);
-    }
+    // const error = err as k8s.Response;
+    // if (error?.statusCode !== StatusMessageEnum.NotFound) {
+    //   throw new Error(error?.statusMessage);
+    // }
     return undefined;
   }
 }
@@ -50,7 +51,7 @@ export async function readNamespaceStatus(
 export async function namespaceExists(name: string): Promise<boolean> {
   try {
     const k8sApi = getApiClient();
-    await k8sApi.readNamespace(name);
+    // await k8sApi.readNamespace(name);
     return true;
   } catch (err: any) {
     return false;

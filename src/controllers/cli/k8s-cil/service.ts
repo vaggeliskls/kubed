@@ -1,7 +1,7 @@
 import { Command, Option } from "commander";
 
-import { executor } from "../../../shared/cli";
-import { actionRunner } from "../../../shared/errors";
+import { executor } from "../../../shared/cli/executor.js";
+import { actionRunner } from "../../../shared/errors/error-handler.js";
 
 export function k8sServiceCli(): Command {
   // DEPLOY

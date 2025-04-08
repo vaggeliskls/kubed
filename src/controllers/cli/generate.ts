@@ -1,8 +1,9 @@
 import { Command } from "commander";
 
-import { cliOutput } from "../../shared/cli";
-import { actionRunner } from "../../shared/errors";
-import * as deployer from "../deployer";
+import { cliOutput } from "../../shared/cli/output.js";
+import { actionRunner } from "../../shared/errors/error-handler.js";
+import * as deployer from "../deployer/deployer.js";
+import * as generate from "../deployer/generate.js";
 
 export function generateCli(): Command {
   const generateCli = new Command();
@@ -22,7 +23,7 @@ export function generateCli(): Command {
     .action(
       actionRunner(async (options: any) => {
         await deployer.selectEnvironment(options.changeEnv, options?.env);
-        await deployer.singleChart({
+        await generate.singleChart({
           apiVersion: options?.apiversion,
           name: options?.name,
           version: options?.chartversion,

@@ -1,11 +1,11 @@
-import { cliOutput, executor } from "../../shared/cli";
-import { DockerImageDetails } from "../deployer";
-import * as deployer from "../deployer";
-import * as system from "../system";
+import { executor } from "../../shared/cli/executor.js";
+import { cliOutput } from "../../shared/cli/output.js";
+import { DockerImageDetails, IDict } from "../deployer/environment.model.js";
+import * as system from "../system/system.js";
 
 export async function transferImages(
   imagesDetails: DockerImageDetails[],
-  deployerValues: deployer.IDict,
+  deployerValues: IDict,
   dest: string,
   options?: {
     skipConfigure?: boolean;

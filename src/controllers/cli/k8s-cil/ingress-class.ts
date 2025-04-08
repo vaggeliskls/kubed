@@ -1,8 +1,10 @@
 import { Command } from "commander";
 
-import { cliOutput, executor } from "../../../shared/cli";
-import { actionRunner } from "../../../shared/errors";
-import * as system from "../../system";
+import { executor } from "../../../shared/cli/executor.js";
+import { cliOutput } from "../../../shared/cli/output.js";
+import { actionRunner } from "../../../shared/errors/error-handler.js";
+import * as system from "../../system/system.js";
+import * as prompt from "../../system/prompts.js";
 
 export function k8sIngressClassCli(): Command {
   // DEPLOY
@@ -33,7 +35,7 @@ export function k8sIngressClassCli(): Command {
           cliOutput.error({ title: "No available ingress classes" });
           system.terminateApp();
         }
-        const selected = await system.promptChoise("Select ingress class", names);
+        const selected = await prompt.promptChoise("Select ingress class", names);
         await executor.runCommandAsync(`kubectl delete ingressclass ${selected}`, {
           stdio: "inherit",
         });

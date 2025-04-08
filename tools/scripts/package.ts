@@ -1,5 +1,5 @@
-import { cliOutput, executor } from "../../src/shared/cli";
-
+import { executor } from "../../src/shared/cli/executor.js";
+import { cliOutput } from "../../src/shared/cli/output.js";
 import { hasFlag, getValueByFlag } from "./shared/argv.utils";
 import { packageJson } from "./shared/package-json-manager";
 
@@ -53,7 +53,7 @@ async function packageApp(os: string, arch: string, isOffline: boolean): Promise
   const target = `node${nodeVersion}-${osMap[os]}-${archMap[arch]}`;
 
   executor.runCommand(
-    `pkg -c package.json --compress GZip -t ${target} -o bin/${appName} dist/index.js`
+    `pkg -c package.json --options experimental-require-module --compress GZip -t ${target} -o bin/${appName} dist/index.js`
   );
 
   return appName;

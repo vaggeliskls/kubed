@@ -1,8 +1,10 @@
 import { Command, Option } from "commander";
 
-import { actionRunner } from "../../shared/errors";
-import * as bundle from "../bundle";
-import * as deployer from "../deployer";
+import { actionRunner } from "../../shared/errors/error-handler.js";
+import * as transfer from "../bundle/transfer.js";
+import * as bundle from "../bundle/bundle.js";
+import * as deployer from "../deployer/deployer.js";
+import * as parser from "../deployer/parser.js";
 
 export function bundleCli(): Command {
   // BUNDLE
@@ -23,7 +25,7 @@ export function bundleCli(): Command {
     .action(
       actionRunner(async (options: any) => {
         const selectedEnv = await deployer.selectEnvironment(options?.changeEnv, options?.env);
-        const envData = deployer.getMergedEnvironment(selectedEnv);
+        const envData = parser.getMergedEnvironment(selectedEnv);
         const deployerValues = await deployer.getDeployerValues(envData, { localOnly: true });
         await bundle.getChartImagesDetails(envData, deployerValues, {
           category: options?.category,
@@ -63,12 +65,12 @@ export function bundleCli(): Command {
     .action(
       actionRunner(async (options: any) => {
         const selectedEnv = await deployer.selectEnvironment(options?.changeEnv, options?.env);
-        const envData = deployer.getMergedEnvironment(selectedEnv);
+        const envData = parser.getMergedEnvironment(selectedEnv);
         const deployerValues = await deployer.getDeployerValues(envData, { localOnly: true });
         const imagesDetails = await bundle.getChartImagesDetails(envData, deployerValues, {
           category: options?.category,
         });
-        await bundle.transferImages(imagesDetails, deployerValues, options?.dest, {
+        await transfer.transferImages(imagesDetails, deployerValues, options?.dest, {
           skipConfigure: options?.skipConfig,
           category: options?.category,
           destAuth: options?.destAuth,
@@ -96,7 +98,7 @@ export function bundleCli(): Command {
     .action(
       actionRunner(async (options: any) => {
         const selectedEnv = await deployer.selectEnvironment(options?.changeEnv, options?.env);
-        const envData = deployer.getMergedEnvironment(selectedEnv);
+        const envData = parser.getMergedEnvironment(selectedEnv);
         const deployerValues = await deployer.getDeployerValues(envData, { localOnly: true });
         const imagesDetails = await bundle.getChartImagesDetails(
           envData,
@@ -135,7 +137,7 @@ export function bundleCli(): Command {
       actionRunner(async (options: any) => {
         const category = options?.category === "all" ? undefined : options?.category;
         const selectedEnv = await deployer.selectEnvironment(options.changeEnv, options?.env);
-        const envData = deployer.getMergedEnvironment(selectedEnv);
+        const envData = parser.getMergedEnvironment(selectedEnv);
         const deployerValues = await deployer.getDeployerValues(envData, { localOnly: true });
         const imagesDetails = await bundle.getChartImagesDetails(envData, deployerValues, {
           category,

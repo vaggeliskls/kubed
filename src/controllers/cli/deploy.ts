@@ -1,11 +1,16 @@
 import { Command } from "commander";
 
-import { cliOutput } from "../../shared/cli";
-import { actionRunner } from "../../shared/errors";
-import { isDebug } from "../../shared/utils";
-import * as deployer from "../deployer";
-import * as k8s from "../kubernetes";
-import * as system from "../system";
+import { cliOutput } from "../../shared/cli/output.js";
+import { actionRunner } from "../../shared/errors/error-handler.js";
+import { isDebug } from "../../shared/utils/env-info.utils.js";
+import * as deployer from "../deployer/deployer.js";
+import * as state from "../deployer/state.js";
+import * as tasks from "../deployer/tasks.js";
+import * as kubectl from "../kubernetes/kubectl.js";
+import * as helm from "../kubernetes/helm.js";
+import * as system from "../system/system.js";
+import * as prompt from "../system/prompts.js";
+import * as parser from "../deployer/parser.js";
 
 export function deployCli(): Command {
   // DEPLOY
@@ -32,7 +37,7 @@ export function deployCli(): Command {
     .action(
       actionRunner(async (options: any) => {
         const selectedEnv = await deployer.selectEnvironment(options.changeEnv, options?.env);
-        const envData = deployer.getMergedEnvironment(selectedEnv);
+        const envData = parser.getMergedEnvironment(selectedEnv);
         deployer.deploymentInfo(envData);
         const deployerValues = await deployer.getDeployerValues(envData, {
           exclude: options?.exclude,
@@ -46,7 +51,7 @@ export function deployCli(): Command {
           });
         }
         // Get local charts values
-        const charts = await deployer.getLocalChartsValues(envData, {
+        const charts = await parser.getLocalChartsValues(envData, {
           find: options?.filter,
           prompt: options?.select,
           group: options?.group,
@@ -58,10 +63,10 @@ export function deployCli(): Command {
         });
         // filter by state
         if (options?.stateReset) {
-          await deployer.resetState();
+          await state.resetState();
         }
-        const chartByState = await deployer.getChartsByState(charts, options?.stateSkip);
-        await deployer.runHelmDeployTaskList(charts);
+        const chartByState = await state.getChartsByState(charts, options?.stateSkip);
+        await tasks.runHelmDeployTaskList(charts);
         if (charts.length === 0 && chartByState.length === 0) {
           cliOutput.warn({ title: "No charts selected for deployment" });
         } else if (charts.length > 0 && chartByState.length === 0) {
@@ -83,22 +88,22 @@ export function deployCli(): Command {
     .action(
       actionRunner(async (options: any) => {
         const selectedEnv = await deployer.selectEnvironment(options.changeEnv, options?.env);
-        const envData = deployer.getMergedEnvironment(selectedEnv);
+        const envData = parser.getMergedEnvironment(selectedEnv);
         deployer.deploymentInfo(envData);
         // Delete namespace and force delete all pods to prevent terminating pods
         if (options?.ns) {
-          await system.promptContinue(`Are you sure about the of ${envData.namespace} namespace`);
-          await k8s.deleteNamespace(envData.namespace);
-          const pods = await k8s.getPodsNames(envData.namespace);
+          await prompt.promptContinue(`Are you sure about the of ${envData.namespace} namespace`);
+          await kubectl.deleteNamespace(envData.namespace);
+          const pods = await kubectl.getPodsNames(envData.namespace);
           for (const pod of pods) {
-            await k8s.podDelete(pod, envData.namespace);
+            await kubectl.podDelete(pod, envData.namespace);
           }
           cliOutput.success({
             title: `Successfully deleted namespace: ${envData.namespace}`,
           });
           system.terminateApp();
         }
-        let releases = await k8s.getRemoteReleases(envData.namespace);
+        let releases = await helm.getRemoteReleases(envData.namespace);
         if (releases.length === 0) {
           cliOutput.error({ title: "No available helm releases" });
           system.terminateApp();
@@ -119,18 +124,18 @@ export function deployCli(): Command {
         const selectedReleases =
           options?.filter || options?.all
             ? releases
-            : await system.promptMultipleChoise("Select online releases", releases);
+            : await prompt.promptMultipleChoise("Select online releases", releases);
         cliOutput.success({
           title: `Selected releases (${selectedReleases.length}): ${selectedReleases.join()}`,
         });
-        await system.promptContinue("Are you sure about the deletion of the selected releases");
+        await prompt.promptContinue("Are you sure about the deletion of the selected releases");
 
-        await deployer.runTasks(
+        await tasks.runTasks(
           selectedReleases.map((release: string) => {
             return {
               name: release,
               asyncFunc: () =>
-                k8s.uninstall({ name: release, namespace: envData.namespace } as any),
+                helm.uninstall({ name: release, namespace: envData.namespace } as any),
             };
           }),
           "Helm uninstall releases"

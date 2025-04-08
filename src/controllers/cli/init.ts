@@ -1,8 +1,8 @@
 import { Command, Option } from "commander";
 
-import { cliOutput } from "../../shared/cli";
-import { actionRunner } from "../../shared/errors";
-import * as deployer from "../deployer";
+import { cliOutput } from "../../shared/cli/output.js";
+import { actionRunner } from "../../shared/errors/error-handler.js";
+import * as packages from "../deployer/packages.js";
 
 export function initCli(): Command {
   const initCli = new Command();
@@ -23,8 +23,8 @@ export function initCli(): Command {
     )
     .action(
       actionRunner(async (options: any) => {
-        await deployer.preparePrerequisites(options?.os, options?.arch, options.all);
-        await deployer.printPackagesInfo();
+        await packages.preparePrerequisites(options?.os, options?.arch, options.all);
+        await packages.printPackagesInfo();
         cliOutput.success({ title: "The preparation of deployer requirements completed" });
       })
     );

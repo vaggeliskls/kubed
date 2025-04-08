@@ -1,10 +1,11 @@
 import { Command, Option } from "commander";
 
-import { cliOutput, executor } from "../../shared/cli";
-import { actionRunner } from "../../shared/errors";
-import { BundleFilesEnum } from "../bundle";
-import * as deployer from "../deployer";
-import * as system from "../system";
+import { cliOutput } from "../../shared/cli/output.js";
+import { executor } from "../../shared/cli/executor.js";
+import { actionRunner } from "../../shared/errors/error-handler.js";
+import { BundleFilesEnum } from "../bundle/bundle.js";
+import * as system from "../system/system.js";
+import * as tasks from "../deployer/tasks.js";
 
 const k3dOptions = {
   cluster: {
@@ -73,7 +74,7 @@ export function k3dCli(): Command {
             asyncFunc: () => system.downloadFile(el.file, `${exportPath}/${el.name}`),
           });
         }
-        await deployer.runTasks(downloadTasks, "Download K3D required images as tars");
+        await tasks.runTasks(downloadTasks, "Download K3D required images as tars");
         cliOutput.success({ title: "The download of k3d offline images completed" });
       })
     );

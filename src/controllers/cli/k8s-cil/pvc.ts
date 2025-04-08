@@ -1,8 +1,10 @@
 import { Command, Option } from "commander";
 
-import { cliOutput, executor } from "../../../shared/cli";
-import { actionRunner } from "../../../shared/errors";
-import * as system from "../../system";
+import { executor } from "../../../shared/cli/executor.js";
+import { cliOutput } from "../../../shared/cli/output.js";
+import { actionRunner } from "../../../shared/errors/error-handler.js";
+import * as system from "../../system/system.js";
+import * as prompt from "../../system/prompts.js";
 
 async function selectPvcs(namespace: string): Promise<string> {
   const jsonResponse = JSON.parse(
@@ -13,7 +15,7 @@ async function selectPvcs(namespace: string): Promise<string> {
     cliOutput.error({ title: "No available persistent volumes" });
     system.terminateApp();
   }
-  return await system.promptChoise("Select persistent volume", names);
+  return await prompt.promptChoise("Select persistent volume", names);
 }
 
 export function k8sPvCCli(): Command {

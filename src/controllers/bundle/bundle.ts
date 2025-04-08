@@ -1,16 +1,22 @@
-import { cliOutput, executor } from "../../shared/cli";
-import { DockerImageDetails } from "../deployer";
-import * as deployer from "../deployer";
-import * as k8s from "../kubernetes";
-import * as system from "../system";
+import { cliOutput } from "../../shared/cli/output.js";
+import { executor } from "../../shared/cli/executor.js";
+import {
+  DockerImageDetails,
+  IDeployer,
+  IDict,
+  IChartsData,
+} from "../deployer/environment.model.js";
+import * as helm from "../kubernetes/helm.js";
+import * as system from "../system/system.js";
+import * as parser from "../deployer/parser.js";
 
 export enum BundleFilesEnum {
   S3DefaultPath = "./assets/s3-files",
 }
 
 export async function getChartImagesDetails(
-  envData: deployer.IDeployer,
-  deployerValues: deployer.IDict,
+  envData: IDeployer,
+  deployerValues: IDict,
   options?: {
     category?: "components" | "k8s-services";
     output?: string;
@@ -18,10 +24,10 @@ export async function getChartImagesDetails(
 ): Promise<DockerImageDetails[]> {
   cliOutput.log({ title: `Export ${options?.category ?? "all"} charts images` });
   const registry = deployerValues["REGISTRY"];
-  const charts: deployer.IChartsData[] = await deployer.getLocalChartsValues(envData, {
+  const charts: IChartsData[] = await parser.getLocalChartsValues(envData, {
     deployerValues,
   });
-  let imagesList = await k8s.exportChartsImages(charts);
+  let imagesList = await helm.exportChartsImages(charts);
   // Filter by registry name
   if (options?.category) {
     imagesList = imagesList.filter((image: string) =>
@@ -40,7 +46,7 @@ export async function getChartImagesDetails(
 
 export async function dockerOciArchiveExport(
   imagesDetails: DockerImageDetails[],
-  deployerValues: deployer.IDict,
+  deployerValues: IDict,
   options?: {
     awsConfigure?: boolean;
     ecrLogin?: boolean;
@@ -95,7 +101,7 @@ export async function dockerOciArchiveExport(
 
 export async function importDockerOciBundle(
   imagesDetails: DockerImageDetails[],
-  deployerValues: deployer.IDict,
+  deployerValues: IDict,
   dest: string,
   category: "components" | "k8s-services",
   options?: { auth?: boolean; destType?: "docker-daemon" | "docker" | "containers-storage" }

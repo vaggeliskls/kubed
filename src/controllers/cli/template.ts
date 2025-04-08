@@ -1,11 +1,14 @@
 import { Command } from "commander";
 
-import { cliOutput } from "../../shared/cli";
-import { actionRunner } from "../../shared/errors";
-import { isDebug } from "../../shared/utils";
-import * as deployer from "../deployer";
-import * as k8s from "../kubernetes";
-import * as system from "../system";
+import { cliOutput } from "../../shared/cli/output.js";
+import { actionRunner } from "../../shared/errors/error-handler.js";
+import { isDebug } from "../../shared/utils/env-info.utils.js";
+import * as deployer from "../deployer/deployer.js";
+import * as helm from "../kubernetes/helm.js";
+import * as system from "../system/system.js";
+import * as parser from "../deployer/parser.js";
+import * as tasks from "../deployer/tasks.js";
+import { IChartsData } from "../deployer/environment.model.js";
 
 export function templateCli(): Command {
   const templateCli = new Command();
@@ -20,7 +23,7 @@ export function templateCli(): Command {
     .action(
       actionRunner(async (options: any) => {
         const selectedEnv = await deployer.selectEnvironment(options.changeEnv, options?.env);
-        const envData = deployer.getMergedEnvironment(selectedEnv);
+        const envData = parser.getMergedEnvironment(selectedEnv);
         deployer.deploymentInfo(envData);
         const deployerValues = await deployer.getDeployerValues(envData, { localOnly: true });
         if (isDebug()) {
@@ -30,18 +33,18 @@ export function templateCli(): Command {
           });
         }
         // Get local charts values
-        const charts = await deployer.getLocalChartsValues(envData, {
+        const charts = await parser.getLocalChartsValues(envData, {
           find: options?.filter,
           prompt: options?.select,
           group: options?.group,
           deployerValues,
         });
         system.deletePath("./templates");
-        await deployer.runTasks(
-          charts.map((chart: deployer.IChartsData) => {
+        await tasks.runTasks(
+          charts.map((chart: IChartsData) => {
             return {
               name: chart.name,
-              asyncFunc: () => k8s.template(chart),
+              asyncFunc: () => helm.template(chart),
             };
           }),
           "Templates Generation"

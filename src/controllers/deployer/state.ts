@@ -1,9 +1,9 @@
-import * as deployer from "../deployer";
-import * as k8s from "../kubernetes";
-import * as system from "../system";
+import * as deployer from "../deployer/deployer.js";
+import * as system from "../system/system.js";
+import * as kubectl from "../kubernetes/kubectl.js";
 
-import { IDict, StateEnum } from "./environment.model";
-import * as parser from "./parser";
+import { IDict, StateEnum, IChartsData } from "./environment.model.js";
+import * as parser from "./parser.js";
 
 const STATE_FILE = ".state";
 const k8sStateConfigName = "state-cli-config";
@@ -47,8 +47,8 @@ function resetLocalState(): void {
  */
 async function setK8sState(data: IDict): Promise<void> {
   const selectedEnv = await deployer.selectEnvironment();
-  const envData = deployer.getMergedEnvironment(selectedEnv);
-  await k8s.createOrPatchConfigMap(k8sStateConfigName, envData.namespace, data);
+  const envData = parser.getMergedEnvironment(selectedEnv);
+  await kubectl.createOrPatchConfigMap(k8sStateConfigName, envData.namespace, data);
 }
 
 /**
@@ -62,8 +62,8 @@ async function setK8sState(data: IDict): Promise<void> {
  */
 async function getK8sState(): Promise<IDict | undefined> {
   const selectedEnv = await deployer.selectEnvironment();
-  const envData = deployer.getMergedEnvironment(selectedEnv);
-  return await k8s.getConfigMapData(k8sStateConfigName, envData.namespace);
+  const envData = parser.getMergedEnvironment(selectedEnv);
+  return await kubectl.getConfigMapData(k8sStateConfigName, envData.namespace);
 }
 
 /**
@@ -76,8 +76,8 @@ async function getK8sState(): Promise<IDict | undefined> {
  */
 async function resetK8sState(): Promise<void> {
   const selectedEnv = await deployer.selectEnvironment();
-  const envData = deployer.getMergedEnvironment(selectedEnv);
-  await k8s.deleteConfigMap(k8sStateConfigName, envData.namespace);
+  const envData = parser.getMergedEnvironment(selectedEnv);
+  await kubectl.deleteConfigMap(k8sStateConfigName, envData.namespace);
 }
 
 /**
@@ -142,7 +142,7 @@ export async function resetState(): Promise<void> {
  * @param charts - An array of chart data objects.
  * @returns A dictionary where the keys are the chart names and the values are the chart template hashes.
  */
-function generateStateData(charts: deployer.IChartsData[]): IDict {
+function generateStateData(charts: IChartsData[]): IDict {
   const stateData: IDict = {};
   charts.forEach(chart => {
     if (chart.chartTemplateHash) {
@@ -187,9 +187,9 @@ async function getChangedChartsNames(
  * @returns A promise that resolves to an array of chart data, potentially filtered based on state changes.
  */
 export async function getChartsByState(
-  charts: deployer.IChartsData[],
+  charts: IChartsData[],
   skip = false
-): Promise<deployer.IChartsData[]> {
+): Promise<IChartsData[]> {
   if (getStateType() === StateEnum.Off || skip) {
     return charts;
   }

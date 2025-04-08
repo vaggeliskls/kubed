@@ -1,8 +1,10 @@
 import Table from "cli-table3";
 
-import { cliOutput, executor } from "../../shared/cli";
-import * as deployer from "../deployer";
-import * as system from "../system";
+import { executor } from "../../shared/cli/executor.js";
+import { cliOutput } from "../../shared/cli/output.js";
+import * as tasks from "../deployer/tasks.js";
+import * as parser from "../deployer/parser.js";
+import * as system from "../system/system.js";
 
 const packagesFolder = "./assets/packages";
 
@@ -85,7 +87,7 @@ export async function preparePrerequisites(
   arch: "arm64" | "amd64",
   all = false
 ) {
-  const settings = deployer.getSettings();
+  const settings = parser.getSettings();
   const sysDetails = systemDetails();
   const selectedOs = os ?? sysDetails.os;
   const selectedArch = arch ?? sysDetails.arch;
@@ -128,8 +130,8 @@ export async function preparePrerequisites(
         ),
     },
   ];
-  const tasks = all ? prerequisites.concat(offlinePrerequisites) : prerequisites;
-  await deployer.runTasks(tasks, "Download Prerequisites");
+  const tasksList = all ? prerequisites.concat(offlinePrerequisites) : prerequisites;
+  await tasks.runTasks(tasksList, "Download Prerequisites");
   // helm exteract and prepare
   await system.extractTarFile(`${packagesFolder}/helm.tar`, `${packagesFolder}`, {
     strip: true,

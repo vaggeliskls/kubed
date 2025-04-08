@@ -9,9 +9,10 @@ import nunjucks from "nunjucks";
 import os from "os";
 import path from "path";
 import randomstring from "randomstring";
+import { fileURLToPath } from "url";
 
-import { executor } from "../../shared/cli";
-import { DockerImageDetails, IDict } from "../deployer";
+import { executor } from "../../shared/cli/executor.js";
+import { DockerImageDetails, IDict } from "../deployer/environment.model.js";
 
 /**
  * Check if a file or folder exists
@@ -97,7 +98,9 @@ export function removeTrailingSlash(url: string): string {
  */
 export function pwd(): string {
   // https://github.com/vercel/pkg#snapshot-filesystem
-  const pwdPath = packaged() ? process.cwd() : path.join(__dirname, "../../../");
+  const filename = fileURLToPath(import.meta.url);
+  const dirPath = path.dirname(filename);
+  const pwdPath = packaged() ? process.cwd() : path.join(dirPath, "../../../");
   return removeTrailingSlash(pwdPath);
 }
 
@@ -338,7 +341,9 @@ export function arch(): NodeJS.Architecture {
  * @returns {string} The path of the current directory without the trailing slash.
  */
 export function packagedPwd(): string {
-  return removeTrailingSlash(path.join(__dirname, "../"));
+  const filename = fileURLToPath(import.meta.url);
+  const dirPath = path.dirname(filename);
+  return removeTrailingSlash(path.join(dirPath, "../"));
 }
 
 /**

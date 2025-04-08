@@ -1,10 +1,12 @@
 import Table from "cli-table3";
 import { Command, Option } from "commander";
 
-import { cliOutput, executor } from "../../../shared/cli";
-import { actionRunner } from "../../../shared/errors";
-import * as k8s from "../../kubernetes";
-import * as system from "../../system";
+import { executor } from "../../../shared/cli/executor.js";
+import { cliOutput } from "../../../shared/cli/output.js";
+import { actionRunner } from "../../../shared/errors/error-handler.js";
+import * as kubectl from "../../kubernetes/kubectl.js";
+import * as system from "../../system/system.js";
+import * as prompt from "../../system/prompts.js";
 
 async function selectSecret(namespace: string): Promise<string> {
   const jsonResponse = JSON.parse(
@@ -15,7 +17,7 @@ async function selectSecret(namespace: string): Promise<string> {
     cliOutput.error({ title: "No available secret" });
     system.terminateApp();
   }
-  return await system.promptChoise("Select secret", names);
+  return await prompt.promptChoise("Select secret", names);
 }
 
 export function k8sSecretCli(): Command {
@@ -41,13 +43,13 @@ export function k8sSecretCli(): Command {
     .action(
       actionRunner(async (options: any) => {
         const selected = await selectSecret(options?.namespace);
-        const secretValues = await k8s.getSecretData(selected, options?.namespace);
+        const secretValues = await kubectl.getSecretData(selected, options?.namespace);
         const toGreen = cliOutput.colors.green;
         const table = new Table({
           head: [toGreen("Property"), toGreen("Value")],
         });
         for (const [key, value] of Object.entries(secretValues ?? {})) {
-          table.push([key, value]);
+          table.push([key, String(value)]);
         }
         cliOutput.log({
           title: "Secret",

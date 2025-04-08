@@ -1,11 +1,15 @@
 import Table from "cli-table3";
 import { Command, Option } from "commander";
 
-import { cliOutput, executor } from "../../shared/cli";
-import { actionRunner } from "../../shared/errors";
-import * as deployer from "../deployer";
-import * as k8s from "../kubernetes";
-import * as system from "../system";
+import { executor } from "../../shared/cli/executor.js";
+import { cliOutput } from "../../shared/cli/output.js";
+import { actionRunner } from "../../shared/errors/error-handler.js";
+import * as deployer from "../deployer/deployer.js";
+import * as k8sclient from "../kubernetes/kubernetes.js";
+import * as kubectl from "../kubernetes/kubectl.js";
+import * as system from "../system/system.js";
+import * as parser from "../deployer/parser.js";
+import * as packages from "../deployer/packages.js";
 
 export function configCli(): Command {
   // CONFIG
@@ -19,9 +23,9 @@ export function configCli(): Command {
     .option("--tls", "Enforce TLS verify for the cluster", false)
     .action(
       actionRunner(async (options: any) => {
-        await k8s.selectClusterContext();
+        await kubectl.selectClusterContext();
         if (options?.skipTls || options?.tls) {
-          await k8s.setKubeConfigSkipTlsVerify(options?.skipTls);
+          await kubectl.setKubeConfigSkipTlsVerify(options?.skipTls);
           cliOutput.success({
             title: `The insecure-skip-tls-verify=${options?.skipTls} updated to kube config`,
           });
@@ -38,24 +42,26 @@ export function configCli(): Command {
     .action(
       actionRunner(async (options: any) => {
         const selectedEnv = await deployer.selectEnvironment(options.changeEnv, options?.env);
-        const envData = deployer.getMergedEnvironment(selectedEnv);
+        const envData = parser.getMergedEnvironment(selectedEnv);
         await deployer.deploymentInfo(envData);
-        const defaultContext = k8s.getDefaultClusterName();
-        const clusterDetails = k8s.getClusterInfo(defaultContext);
+        const defaultContext = k8sclient.getDefaultClusterName();
+        const clusterDetails = k8sclient.getClusterInfo(defaultContext);
         const table = new Table({
           colWidths: [15, 90],
         });
         const toGreen = cliOutput.colors.green;
         table.push({ [`${toGreen("Home")}`]: system.getHomeDirectory() });
-        table.push({ [`${toGreen("Kubeconfig")}`]: k8s.getKubeConfigPath() ?? "N/A" });
-        table.push({ [`${toGreen("Kubernetes")}`]: (await k8s.getKubernetesVersion()) ?? "N/A" });
-        table.push({ [`${toGreen("Openshift")}`]: (await k8s.isOpenshift()) ?? "N/A" });
+        table.push({ [`${toGreen("Kubeconfig")}`]: k8sclient.getKubeConfigPath() ?? "N/A" });
+        table.push({
+          [`${toGreen("Kubernetes")}`]: (await kubectl.getKubernetesVersion()) ?? "N/A",
+        });
+        table.push({ [`${toGreen("Openshift")}`]: (await k8sclient.isOpenshift()) ?? "N/A" });
         for (const [key, value] of Object.entries(clusterDetails)) {
           table.push({ [`${toGreen(key)}`]: value ?? "-" });
         }
         cliOutput.log({ title: "Machine Information", bodyLines: [table.toString()] });
         // Print packages version information
-        await deployer.printPackagesInfo();
+        await packages.printPackagesInfo();
       })
     );
 
@@ -64,7 +70,7 @@ export function configCli(): Command {
     .description("Print nodes information")
     .action(
       actionRunner(async () => {
-        const nodes = await k8s.getNodeDetails();
+        const nodes = await kubectl.getNodeDetails();
         let index = 1;
         nodes.forEach((node: any) => {
           const table = new Table();
@@ -96,8 +102,8 @@ export function configCli(): Command {
     .addOption(new Option("-c, --cluster <text>", "Cluster name"))
     .action(
       actionRunner(async (options: any) => {
-        const selectedContext = options?.cluster ?? (await k8s.selectClusterContext());
-        await k8s.deleteClusterContext(selectedContext);
+        const selectedContext = options?.cluster ?? (await kubectl.selectClusterContext());
+        await kubectl.deleteClusterContext(selectedContext);
         cliOutput.success({ title: "The cluster delete completed" });
       })
     );
@@ -122,12 +128,12 @@ export function configCli(): Command {
     .action(
       actionRunner(async (options: any) => {
         const selectedEnv = await deployer.selectEnvironment(options.changeEnv, options?.env);
-        const envData = deployer.getMergedEnvironment(selectedEnv);
+        const envData = parser.getMergedEnvironment(selectedEnv);
         const namespace = options?.namespace ?? envData.namespace;
         if (options?.createNamespace) {
-          await k8s.createNamespace(namespace);
+          await kubectl.createNamespace(namespace);
         }
-        await k8s.deleteSecret(options?.name, namespace);
+        await kubectl.deleteSecret(options?.name, namespace);
         await executor.runCommandAsync(
           `kubectl create secret --namespace ${namespace} docker-registry ${options?.name} --docker-server=${options?.registry} --docker-username=${options?.username} --docker-password=${options?.password}`
         );
@@ -142,7 +148,7 @@ export function configCli(): Command {
     .addOption(new Option("-s, --skip-config", "Skip configure").default(false))
     .action(
       actionRunner(async (options: any) => {
-        await k8s.addAwsContext(options?.cluster, options.skipConfig);
+        await kubectl.addAwsContext(options?.cluster, options.skipConfig);
         cliOutput.success({ title: "The default cluster change completed" });
       })
     );
@@ -157,7 +163,7 @@ export function configCli(): Command {
     .addOption(new Option("-p, --password <text>", "Cluster password"))
     .action(
       actionRunner(async (options: any) => {
-        await k8s.addOpenshiftContext(options?.cluster, options.username, options.password);
+        await kubectl.addOpenshiftContext(options?.cluster, options.username, options.password);
         cliOutput.success({ title: "The default cluster change completed" });
       })
     );
@@ -170,7 +176,7 @@ export function configCli(): Command {
     .addOption(new Option("-s, --skip-config", "Skip configure").default(false))
     .action(
       actionRunner(async (options: any) => {
-        await k8s.addAzureCluster(options?.cluster, options?.clusterGroup, options.skipConfig);
+        await kubectl.addAzureCluster(options?.cluster, options?.clusterGroup, options.skipConfig);
         cliOutput.success({ title: "The default cluster change completed" });
       })
     );
@@ -183,8 +189,8 @@ export function configCli(): Command {
     .action(
       actionRunner(async (options: any) => {
         const selectedEnv = await deployer.selectEnvironment(options.changeEnv, options?.env);
-        const envData = deployer.getMergedEnvironment(selectedEnv);
-        const displayValues = deployer.getKeysListByProp(envData, "display");
+        const envData = parser.getMergedEnvironment(selectedEnv);
+        const displayValues = parser.getKeysListByProp(envData, "display");
         const deployerValues = await deployer.getDeployerValues(envData);
         const table = new Table();
         const toGreen = cliOutput.colors.green;
@@ -208,10 +214,10 @@ export function configCli(): Command {
     .action(
       actionRunner(async (options: any) => {
         const selectedEnv = await deployer.selectEnvironment(options.changeEnv, options?.env);
-        const envData = deployer.getMergedEnvironment(selectedEnv);
+        const envData = parser.getMergedEnvironment(selectedEnv);
         deployer.deploymentInfo(envData);
         const deployerValues = await deployer.getDeployerValues(envData, { localOnly: true });
-        const charts = await deployer.getLocalChartsValues(envData, {
+        const charts = await parser.getLocalChartsValues(envData, {
           deployerValues,
         });
         const table = new Table({

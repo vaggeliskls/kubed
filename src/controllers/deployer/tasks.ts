@@ -1,10 +1,10 @@
 import { Listr, PRESET_TIMER, ListrTask } from "listr2";
 import * as _ from "lodash";
 
-import { cliOutput } from "../../shared/cli";
-import * as k8s from "../kubernetes";
+import { cliOutput } from "../../shared/cli/output.js";
+import * as helm from "../kubernetes/helm.js";
 
-import { IChartsData } from "./environment.model";
+import { IChartsData } from "./environment.model.js";
 
 export interface Ctx {
   exitOnError: boolean;
@@ -22,7 +22,7 @@ export async function runHelmDeployTaskList(charts: IChartsData[]): Promise<void
         title: `${index}. ${chart.name}`,
         task: async (ctx: any, task: any): Promise<void> => {
           try {
-            await k8s.deploy(chart);
+            await helm.deploy(chart);
           } catch (err) {
             throw new Error(`${task.title} -> ${err as any}`);
           }

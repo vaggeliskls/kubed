@@ -1,7 +1,7 @@
 // Importing necessary modules
-import { prompt } from "enquirer";
+import enquirer from "enquirer";
 
-import * as system from ".";
+import * as system from "./system.js";
 
 // Function to prompt user for text input
 export async function promptText(
@@ -14,7 +14,7 @@ export async function promptText(
     // Set input type based on whether input is sensitive or not
     const type = sensitive ? "password" : "input";
     // Prompt user with message and input type
-    const response: any = await prompt({
+    const response: any = await enquirer.prompt({
       type: type,
       name: "field",
       message: `${message}`,
@@ -33,7 +33,7 @@ export async function promptText(
 export async function promptContinue(message = "Are you sure"): Promise<boolean> {
   try {
     // Prompt user with message and confirm type
-    const response: any = await prompt({
+    const response: any = await enquirer.prompt({
       type: "confirm",
       name: "field",
       message: `${message}`,
@@ -57,7 +57,7 @@ export async function promptChoise(
 ): Promise<string> {
   try {
     // Prompt user with message and select type
-    const response: any = await prompt({
+    const response: any = await enquirer.prompt({
       type: "select",
       name: "field",
       // Set skip option to false if not provided

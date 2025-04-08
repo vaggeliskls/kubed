@@ -2,8 +2,8 @@ import * as colorette from "colorette";
 import { EOL } from "node:os";
 import * as readline from "node:readline";
 
-import * as deployer from "../../controllers/deployer";
-import { FINISH_SYMBOL, START_SYMBOL, SUCCESS_SYMBOL } from "../constants";
+import * as deployer from "../../controllers/deployer/deployer.js";
+import { FINISH_SYMBOL, START_SYMBOL, SUCCESS_SYMBOL } from "../constants/symbols.js";
 
 interface CLIMessageConfig {
   title: string;

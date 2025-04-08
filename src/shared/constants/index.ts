@@ -1,2 +1,2 @@
-export * from "./process-env";
-export * from "./symbols";
+export * from "./process-env.js";
+export * from "./symbols.js";

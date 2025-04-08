@@ -1,14 +1,15 @@
 // Importing necessary modules
 import path from "path";
 
-import { executor } from "../../shared/cli";
-import { isDryRun } from "../../shared/utils";
-import * as k8s from "../kubernetes";
-import * as system from "../system";
+import { executor } from "../../shared/cli/executor.js";
+import { isDryRun } from "../../shared/utils/env-info.utils.js";
+import * as helm from "../kubernetes/helm.js";
+import * as k8s from "../kubernetes/kubernetes.js";
+import * as system from "../system/system.js";
 
-import * as deployer from "./deployer";
-import { Chart, ConfigMap, IDict, Secret } from "./environment.model";
-import * as parser from "./parser";
+import * as deployer from "./deployer.js";
+import { Chart, ConfigMap, IDict, Secret } from "./environment.model.js";
+import * as parser from "./parser.js";
 
 async function generateConfigSecret(
   chartTemplatesPath: string,
@@ -99,6 +100,6 @@ export async function singleChart(chart: Chart): Promise<void> {
 
   if (!isDryRun()) {
     await executor.runCommandAsync(`helm dependency update ${chartFolder}`);
-    await k8s.template({ path: chartFolder } as any, { output: false });
+    await helm.template({ path: chartFolder } as any, { output: false });
   }
 }

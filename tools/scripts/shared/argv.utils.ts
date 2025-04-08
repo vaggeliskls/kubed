@@ -1,6 +1,6 @@
 import process from "node:process";
 
-import { cliOutput } from "../../../src/shared/cli";
+import { cliOutput } from "../../../src/shared/cli/output";
 
 function findIndexFlag(flag: string): number {
   return process.argv.findIndex(arg => arg === flag || arg.split("=")[0] === flag);

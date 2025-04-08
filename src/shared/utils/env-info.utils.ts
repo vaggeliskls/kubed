@@ -1,4 +1,4 @@
-import { KUBED_DRY_RUN, KUBED_VERBOSE_LOGGING, KUBED_DEBUG } from "../constants";
+import { KUBED_DRY_RUN, KUBED_VERBOSE_LOGGING, KUBED_DEBUG } from "../constants/process-env.js";
 
 export function isVerbose() {
   return process.env[KUBED_VERBOSE_LOGGING] === "true";

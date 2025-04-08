@@ -1,18 +1,11 @@
 import { ExecSyncOptions, execSync, spawn } from "node:child_process";
 import { Readable } from "node:stream";
 
-import { getHelmArgs, getKubeCtlArgs } from "../../controllers/deployer";
-import {
-  containsWord,
-  pathExists,
-  platform,
-  pwd,
-  replaceWholeWord,
-} from "../../controllers/system";
-import * as system from "../../controllers/system";
-import { getStrippedEnvironmentVariables, isDryRun, isVerbose } from "../utils";
+import { getHelmArgs, getKubeCtlArgs } from "../../controllers/deployer/parser.js";
+import * as system from "../../controllers/system/system.js";
+import { getStrippedEnvironmentVariables, isDryRun, isVerbose } from "../utils/env-info.utils.js";
 
-import { cliOutput } from "./output";
+import { cliOutput } from "./output.js";
 
 interface RunCommandOptions extends Partial<ExecSyncOptions> {
   failOnError?: boolean;
@@ -153,18 +146,18 @@ class Executor {
   }
 
   private cmdReplaceWithLocalPackages(cmd: string): string {
-    const packagesFolder = `${pwd()}/assets/packages`;
-    const extention = platform() === "win32" ? ".exe" : "";
+    const packagesFolder = `${system.pwd()}/assets/packages`;
+    const extention = system.platform() === "win32" ? ".exe" : "";
     // remove duplicate spaces and trim
     let replacedCmd = system.removeDuplicateSpaces(cmd);
     const localPackages = ["helm", "kubectl", "skopeo", "k3d"];
     const helmArgs = getHelmArgs();
     const kubectlArgs = getKubeCtlArgs();
     for (const localPackage of localPackages) {
-      if (containsWord(cmd, localPackage)) {
+      if (system.containsWord(cmd, localPackage)) {
         const localPackagePath = `${packagesFolder}/${localPackage}${extention}`;
-        replacedCmd = pathExists(localPackagePath)
-          ? replaceWholeWord(localPackage, localPackagePath, replacedCmd)
+        replacedCmd = system.pathExists(localPackagePath)
+          ? system.replaceWholeWord(localPackage, localPackagePath, replacedCmd)
           : replacedCmd;
         // Add extra advanced arguments to helm commants
         replacedCmd =

@@ -1,14 +1,17 @@
 // Importing necessary modules
 import Table from "cli-table3";
 import * as _ from "lodash";
+import { createRequire } from "module";
 
-import { cliOutput } from "../../shared/cli";
-import { isDryRun } from "../../shared/utils";
-import * as k8s from "../kubernetes";
-import * as system from "../system";
+import { cliOutput } from "../../shared/cli/output.js";
+import { isDryRun } from "../../shared/utils/env-info.utils.js";
+import * as kubectl from "../kubernetes/kubectl.js";
+import * as k8s from "../kubernetes/kubernetes.js";
+import * as system from "../system/system.js";
+import * as prompts from "../system/prompts.js";
 
-import { DataTypeEnum, IDeployer, IDict, SettingFile } from "./environment.model";
-import * as parser from "./parser";
+import { DataTypeEnum, IDeployer, IDict, SettingFile } from "./environment.model.js";
+import * as parser from "./parser.js";
 
 function getPackagedAppDetails(): IDict | any {
   try {
@@ -32,8 +35,9 @@ export function getPackagedLogoText(): string {
 
 // Function to print the deployer logo
 export function printDeployerLogo(): void {
-  // eslint-disable-next-line
-  const logo = require("asciiart-logo");
+  const required = createRequire(import.meta.url);
+  // Now you can use "require" just like in CommonJS
+  const logo = required("asciiart-logo");
   let deployerLogo = logo({
     name: getPackagedAppName(),
     borderColor: "bold-black",
@@ -106,14 +110,14 @@ export async function getDeployerValues(
   } else {
     if (!options?.skipCreateNamespace) {
       // Create namespace if it doesn't exist
-      const isNamespaceExist = await k8s.isNamespaceExist(namespace);
+      const isNamespaceExist = await kubectl.isNamespaceExist(namespace);
       if (!isNamespaceExist) {
-        await k8s.createNamespace(namespace);
+        await kubectl.createNamespace(namespace);
       }
     }
     // Config Map
     // Get remote values if they exist
-    const remoteConfigMapValues = await k8s.getConfigMapData(configMapName, namespace);
+    const remoteConfigMapValues = await kubectl.getConfigMapData(configMapName, namespace);
     // When we have remote config values
     if (remoteConfigMapValues) {
       localConfigMapValues = remoteConfigMapValues;
@@ -145,7 +149,7 @@ export async function getDeployerValues(
         );
       }
       // Update the config map
-      await k8s.createOrPatchConfigMap(configMapName, namespace, localConfigMapValues);
+      await kubectl.createOrPatchConfigMap(configMapName, namespace, localConfigMapValues);
     } else {
       // Get local values for config map
       localConfigMapValues = await parser.getLocalConfigMapDict(envData, { exclude });
@@ -157,11 +161,11 @@ export async function getDeployerValues(
         );
       }
       // Create or patch the config map
-      await k8s.createOrPatchConfigMap(configMapName, namespace, localConfigMapValues);
+      await kubectl.createOrPatchConfigMap(configMapName, namespace, localConfigMapValues);
     }
     // Secret
     // Get remote values if they exist
-    const remoteSecretValues = await k8s.getSecretData(secretName, namespace);
+    const remoteSecretValues = await kubectl.getSecretData(secretName, namespace);
     // When we have remote secret values
     if (remoteSecretValues) {
       localSecretValues = remoteSecretValues;
@@ -193,7 +197,7 @@ export async function getDeployerValues(
           _.pick(forceOverrideValues, _.keys(localSecretValues))
         );
       }
-      await k8s.createOrPatchSecret(secretName, namespace, localSecretValues);
+      await kubectl.createOrPatchSecret(secretName, namespace, localSecretValues);
     } else {
       // Generate local values and update remote secret config
       localSecretValues = await parser.getLocalSecretDict(envData, { exclude });
@@ -205,7 +209,7 @@ export async function getDeployerValues(
         );
       }
       // Create or patch the secret
-      await k8s.createOrPatchSecret(secretName, namespace, localSecretValues);
+      await kubectl.createOrPatchSecret(secretName, namespace, localSecretValues);
     }
   }
   // Return the merged values
@@ -234,7 +238,7 @@ export async function selectEnvironment(prompt = false, environment?: string): P
   // Check if environment needs to be reset
   // Prompt user to select environment
   if ((!settings.ENVIRONMENT || prompt) && !environment) {
-    settings.ENVIRONMENT = await system.promptChoise("Selected environment", envs, {
+    settings.ENVIRONMENT = await prompts.promptChoise("Selected environment", envs, {
       initial: settings.ENVIRONMENT,
     });
   } else {
@@ -315,7 +319,7 @@ export async function awsLocalConfigure(): Promise<{
   }
   const accessKeyId =
     system.getEnv("AWS_ACCESS_KEY_ID") ??
-    (await system.promptText(
+    (await prompts.promptText(
       "AWS ACCESS KEY ID",
       true,
       false,
@@ -323,7 +327,7 @@ export async function awsLocalConfigure(): Promise<{
     ));
   const secretAccessKey =
     system.getEnv("AWS_SECRET_ACCESS_KEY") ??
-    (await system.promptText(
+    (await prompts.promptText(
       "AWS SECRET ACCESS KEY",
       true,
       true,
@@ -331,7 +335,7 @@ export async function awsLocalConfigure(): Promise<{
     ));
   const region =
     system.getEnv("AWS_REGION") ??
-    (await system.promptText("AWS REGION", true, false, existingConfig["region"] ?? "eu-west-2"));
+    (await prompts.promptText("AWS REGION", true, false, existingConfig["region"] ?? "eu-west-2"));
 
   system.writeToFile(
     credentialsFile,

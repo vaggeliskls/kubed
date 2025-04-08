@@ -1,9 +1,11 @@
 import { V1Node, V1PersistentVolumeClaim, V1Pod, VersionInfo } from "@kubernetes/client-node";
 
-import { cliOutput, executor } from "../../shared/cli";
-import * as deployer from "../deployer";
-import * as k8s from "../kubernetes";
-import * as system from "../system";
+import { executor } from "../../shared/cli/executor.js";
+import { cliOutput } from "../../shared/cli/output.js";
+import * as k8s from "../kubernetes/kubernetes.js";
+import * as system from "../system/system.js";
+import * as prompts from "../system/prompts.js";
+import { ConfigMap, IDict, Secret } from "../deployer/environment.model.js";
 
 // Function to select a cluster context
 export async function selectClusterContext(clusterName?: string): Promise<string> {
@@ -17,7 +19,7 @@ export async function selectClusterContext(clusterName?: string): Promise<string
   // Prompt the user to select a context from the list
   const selectedContext =
     clusterName ??
-    (await system.promptChoise("Cluster Context", contextList, {
+    (await prompts.promptChoise("Cluster Context", contextList, {
       initial: defaultContext,
       skip: contextList.length === 0,
     }));
@@ -32,7 +34,7 @@ export async function deleteClusterContext(clusterName?: string): Promise<void> 
   const contextList = k8s.getClusterContextList();
   // Prompt the user to select a context from the list to delete
   const selectedContext =
-    clusterName ?? (await system.promptChoise("Delete Cluster Context", contextList));
+    clusterName ?? (await prompts.promptChoise("Delete Cluster Context", contextList));
   // Unset the selected context as the active context
   await executor.runCommandAsync(`kubectl config unset contexts.${selectedContext}`);
 }
@@ -44,7 +46,7 @@ export async function addAwsContext(clusterName?: string, skipConfig = false): P
     await executor.runCommandAsync("aws configure", { stdio: "inherit" });
   }
   // Prompt the user to enter the name of the AWS cluster
-  const clusterNameSelection = clusterName ?? (await system.promptText("AWS Cluster Name"));
+  const clusterNameSelection = clusterName ?? (await prompts.promptText("AWS Cluster Name"));
   // Update the kubeconfig file with the AWS cluster information
   await executor.runCommandAsync(`aws eks update-kubeconfig --name ${clusterNameSelection}`);
 }
@@ -57,9 +59,9 @@ export async function addOpenshiftContext(
 ): Promise<void> {
   // Prompt the user to enter the name of the AWS cluster
   const clusterNameSelection =
-    clusterName ?? (await system.promptText("Control Plane API endpoint"));
-  const username = clusterUsername ?? (await system.promptText("Username"));
-  const password = clusterPassword ?? (await system.promptText("Password"));
+    clusterName ?? (await prompts.promptText("Control Plane API endpoint"));
+  const username = clusterUsername ?? (await prompts.promptText("Username"));
+  const password = clusterPassword ?? (await prompts.promptText("Password"));
   // Update the kubeconfig file with the AWS cluster information
   await executor.runCommandAsync(
     `oc login --server=${clusterNameSelection} --username=${username} --password=${password} --insecure-skip-tls-verify`
@@ -77,8 +79,8 @@ export async function addAzureCluster(
     await executor.runCommandAsync("az login", { stdio: "inherit" });
   }
   // Prompt the user to enter the name and group of the Azure cluster
-  const clusterNameSelection = clusterName ?? (await system.promptText("Azure Cluster Name"));
-  const clusterGroupSelection = clusterGroup ?? (await system.promptText("Azure Cluster Group"));
+  const clusterNameSelection = clusterName ?? (await prompts.promptText("Azure Cluster Name"));
+  const clusterGroupSelection = clusterGroup ?? (await prompts.promptText("Azure Cluster Group"));
   // Get the credentials for the Azure cluster and update the kubeconfig file
   await executor.runCommandAsync(
     `az aks get-credentials --name ${clusterNameSelection} -g ${clusterGroupSelection}`
@@ -187,10 +189,10 @@ export async function deleteNamespace(namespace: string): Promise<void> {
 export async function createOrPatchConfigMap(
   name: string,
   namespace: string,
-  data: deployer.IDict
+  data: IDict
 ): Promise<void> {
   try {
-    const configMap = new deployer.ConfigMap();
+    const configMap = new ConfigMap();
     configMap.metadata.name = name;
     configMap.metadata.namespace = namespace;
     configMap.data = data;
@@ -208,10 +210,10 @@ export async function createOrPatchConfigMap(
 export async function createOrPatchSecret(
   name: string,
   namespace: string,
-  data: deployer.IDict
+  data: IDict
 ): Promise<void> {
   try {
-    const secret = new deployer.Secret();
+    const secret = new Secret();
     secret.metadata.name = name;
     secret.metadata.namespace = namespace;
     secret.data = k8s.encodeSecretData(data);
@@ -253,13 +255,13 @@ export async function deleteSecret(name: string, namespace: string): Promise<voi
 export async function getConfigMapData(
   name: string,
   namespace: string
-): Promise<deployer.IDict | undefined> {
+): Promise<IDict | undefined> {
   try {
     const data = await executor.runCommandAsync(
       `kubectl get configmap ${name} -o json --namespace=${namespace}`,
       { silent: true }
     );
-    const configmap = JSON.parse(data) as deployer.ConfigMap;
+    const configmap = JSON.parse(data) as ConfigMap;
     return configmap.data;
   } catch (err: any) {
     if ((err as string)?.includes("NotFound")) {
@@ -270,16 +272,13 @@ export async function getConfigMapData(
   }
 }
 
-export async function getSecretData(
-  name: string,
-  namespace: string
-): Promise<deployer.IDict | undefined> {
+export async function getSecretData(name: string, namespace: string): Promise<IDict | undefined> {
   try {
     const dataStr = await executor.runCommandAsync(
       `kubectl get secret ${name} -o json --namespace=${namespace}`,
       { silent: true }
     );
-    const secret = JSON.parse(dataStr) as deployer.Secret;
+    const secret = JSON.parse(dataStr) as Secret;
     return k8s.decodeSecretData(secret.data);
   } catch (err: any) {
     if ((err as string)?.includes("NotFound")) {

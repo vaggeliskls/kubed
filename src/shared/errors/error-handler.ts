@@ -1,5 +1,5 @@
-import { cliOutput } from "../cli";
-import { mapErrorToBodyLines } from "../utils";
+import { cliOutput } from "../cli/output.js";
+import { mapErrorToBodyLines } from "../utils/error.utils.js";
 
 function actionErrorHandler(error: Error) {
   cliOutput.error({ title: error.message, bodyLines: mapErrorToBodyLines(error) });

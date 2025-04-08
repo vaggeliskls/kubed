@@ -1,9 +1,9 @@
 // Importing necessary modules
 import * as _ from "lodash";
 
-import { executor } from "../../shared/cli";
-import { IChartsData } from "../deployer";
-import * as system from "../system";
+import { executor } from "../../shared/cli/executor.js";
+import { IChartsData } from "../deployer/environment.model.js";
+import * as system from "../system/system.js";
 
 // Deploy function to deploy a chart
 export async function deploy(chart: IChartsData): Promise<void> {

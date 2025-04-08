@@ -1,8 +1,8 @@
 import { Command, Option } from "commander";
 
-import { cliOutput, executor } from "../../../shared/cli";
-import { actionRunner } from "../../../shared/errors";
-// import * as system from "../../system";
+import { executor } from "../../../shared/cli/executor.js";
+import { cliOutput } from "../../../shared/cli/output.js";
+import { actionRunner } from "../../../shared/errors/error-handler.js";
 
 export function k8sPvCli(): Command {
   // DEPLOY

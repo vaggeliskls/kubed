@@ -1,10 +1,12 @@
 import { Command } from "commander";
 
-import { cliOutput } from "../../../shared/cli";
-import { actionRunner } from "../../../shared/errors";
-import * as deployer from "../../deployer";
-import * as k8s from "../../kubernetes";
-import * as system from "../../system";
+import { cliOutput } from "../../../shared/cli/output.js";
+import { actionRunner } from "../../../shared/errors/error-handler.js";
+import * as deployer from "../../deployer/deployer.js";
+import * as parser from "../../deployer/parser.js";
+import * as kubectl from "../../kubernetes/kubectl.js";
+import * as system from "../../system/system.js";
+import * as prompt from "../../system/prompts.js";
 
 export function k8sPodsCli(): Command {
   // DEPLOY
@@ -19,9 +21,9 @@ export function k8sPodsCli(): Command {
     .action(
       actionRunner(async (options: any) => {
         const selectedEnv = await deployer.selectEnvironment(options.changeEnv, options?.env);
-        const envData = deployer.getMergedEnvironment(selectedEnv);
+        const envData = parser.getMergedEnvironment(selectedEnv);
         const namespace = options?.namespace ?? envData.namespace;
-        await k8s.listPods(options?.all ? null : namespace);
+        await kubectl.listPods(options?.all ? null : namespace);
       })
     );
 
@@ -35,9 +37,9 @@ export function k8sPodsCli(): Command {
     .action(
       actionRunner(async (options: any) => {
         const selectedEnv = await deployer.selectEnvironment(options.changeEnv, options?.env);
-        const envData = deployer.getMergedEnvironment(selectedEnv);
+        const envData = parser.getMergedEnvironment(selectedEnv);
         const namespace = options?.namespace ?? envData.namespace;
-        const pods = await k8s.getPodsNames(namespace);
+        const pods = await kubectl.getPodsNames(namespace);
         if (pods.length === 0) {
           cliOutput.error({ title: `Namespace: ${namespace}, No available pods` });
           system.terminateApp();
@@ -48,14 +50,14 @@ export function k8sPodsCli(): Command {
             options?.filter.some((term: string) => pod?.includes(term))
           );
         } else {
-          selectedpods = await system.promptMultipleChoise("Select pods", pods);
+          selectedpods = await prompt.promptMultipleChoise("Select pods", pods);
         }
         cliOutput.success({
           title: `Selected pods (${selectedpods.length}): ${selectedpods.join()}`,
         });
-        await system.promptContinue("Are you sure about about deleting selected pods");
+        await prompt.promptContinue("Are you sure about about deleting selected pods");
         for (const pod of selectedpods) {
-          await k8s.podDelete(pod, namespace);
+          await kubectl.podDelete(pod, namespace);
         }
 
         cliOutput.success({ title: "The pod delete operation completed" });
@@ -71,9 +73,9 @@ export function k8sPodsCli(): Command {
     .action(
       actionRunner(async (options: any) => {
         const selectedEnv = await deployer.selectEnvironment(options.changeEnv, options?.env);
-        const envData = deployer.getMergedEnvironment(selectedEnv);
+        const envData = parser.getMergedEnvironment(selectedEnv);
         const namespace = options?.namespace ?? envData.namespace;
-        const pods = await k8s.getPodsNames(namespace);
+        const pods = await kubectl.getPodsNames(namespace);
         if (pods.length === 0) {
           cliOutput.warn({ title: `Namespace: ${namespace}, No available pods` });
           system.terminateApp();
@@ -87,10 +89,10 @@ export function k8sPodsCli(): Command {
           }
           selectedpod = selectedpod[0];
         } else {
-          selectedpod = await system.promptChoise("Select pod", pods);
+          selectedpod = await prompt.promptChoise("Select pod", pods);
         }
         cliOutput.success({ title: `Logs ${selectedpod}` });
-        await k8s.podLogs(namespace, selectedpod);
+        await kubectl.podLogs(namespace, selectedpod);
         cliOutput.success({ title: "The pod logs operation completed" });
       })
     );
@@ -104,9 +106,9 @@ export function k8sPodsCli(): Command {
     .action(
       actionRunner(async (options: any) => {
         const selectedEnv = await deployer.selectEnvironment(options.changeEnv, options?.env);
-        const envData = deployer.getMergedEnvironment(selectedEnv);
+        const envData = parser.getMergedEnvironment(selectedEnv);
         const namespace = options?.namespace ?? envData.namespace;
-        const pods = await k8s.getPodsNames(namespace);
+        const pods = await kubectl.getPodsNames(namespace);
         if (pods.length === 0) {
           cliOutput.error({ title: `Namespace: ${namespace}, No available pods` });
           system.terminateApp();
@@ -120,10 +122,10 @@ export function k8sPodsCli(): Command {
           }
           selectedpod = selectedpod[0];
         } else {
-          selectedpod = await system.promptChoise("Select pod", pods);
+          selectedpod = await prompt.promptChoise("Select pod", pods);
         }
         cliOutput.success({ title: `Describe ${selectedpod}` });
-        await k8s.describePod(namespace, selectedpod);
+        await kubectl.describePod(namespace, selectedpod);
         cliOutput.success({ title: "The pod describe operation completed" });
       })
     );
@@ -138,9 +140,9 @@ export function k8sPodsCli(): Command {
     .action(
       actionRunner(async (options: any) => {
         const selectedEnv = await deployer.selectEnvironment(options.changeEnv, options?.env);
-        const envData = deployer.getMergedEnvironment(selectedEnv);
+        const envData = parser.getMergedEnvironment(selectedEnv);
         const namespace = options?.namespace ?? envData.namespace;
-        const pods = await k8s.getPodsNames(namespace);
+        const pods = await kubectl.getPodsNames(namespace);
         if (pods.length === 0) {
           cliOutput.error({ title: `Namespace: ${namespace}, No available pods` });
           system.terminateApp();
@@ -154,10 +156,10 @@ export function k8sPodsCli(): Command {
           }
           selectedpod = selectedpod[0];
         } else {
-          selectedpod = await system.promptChoise("Select pod", pods);
+          selectedpod = await prompt.promptChoise("Select pod", pods);
         }
         cliOutput.success({ title: `Connecting... ${selectedpod}` });
-        await k8s.attachPod(namespace, selectedpod);
+        await kubectl.attachPod(namespace, selectedpod);
         cliOutput.success({ title: "The pod attach operation completed" });
       })
     );

@@ -1,8 +1,13 @@
 import { Command } from "commander";
 
-import * as cli from "./controllers/cli";
-import * as deployer from "./controllers/deployer";
-import { KUBED_DRY_RUN, KUBED_VERBOSE_LOGGING, KUBED_DEBUG } from "./shared/constants";
+import * as deployer from "./controllers/deployer/deployer.js";
+import * as parser from "./controllers/deployer/parser.js";
+import {
+  KUBED_DRY_RUN,
+  KUBED_VERBOSE_LOGGING,
+  KUBED_DEBUG,
+} from "./shared/constants/process-env.js";
+import * as cli from "./controllers/cli/index.js";
 
 async function run() {
   // Prepare packed files
@@ -10,9 +15,9 @@ async function run() {
   // Print logo
   deployer.printDeployerLogo();
   // Prepare settings file
-  deployer.prepareSettings();
+  parser.prepareSettings();
   // Prepare env variables used by the app
-  deployer.prepareEnvVariables();
+  parser.prepareEnvVariables();
   const program = new Command();
   program
     .name("<executable>")

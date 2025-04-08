@@ -2,8 +2,8 @@
 import * as _ from "lodash";
 import path from "path";
 
-import * as system from "../system";
-
+import * as system from "../system/system.js";
+import * as prompts from "../system/prompts.js";
 import {
   IDeployer,
   IData,
@@ -11,7 +11,7 @@ import {
   IDict,
   IChartsData,
   SettingFile,
-} from "./environment.model";
+} from "./environment.model.js";
 
 const KUBED_RC_FILE = ".configrc.json";
 
@@ -133,7 +133,7 @@ export async function parseEnvironmentDataOptions(
     } else if (obj.type === DataTypeEnum.Prompt) {
       value =
         envValue ??
-        (await system.promptText(obj?.message ?? obj.key, true, obj?.sensitive ?? false));
+        (await prompts.promptText(obj?.message ?? obj.key, true, obj?.sensitive ?? false));
       // Otherwise, use the object's value
     } else {
       value = envValue ?? obj.value;
@@ -302,7 +302,7 @@ export async function getLocalChartsValues(
   }
   // If prompt is true, prompt the user to select releases
   if (options?.prompt ?? false) {
-    const selectedChartNames = await system.promptMultipleChoise(
+    const selectedChartNames = await prompts.promptMultipleChoise(
       "Select releases",
       charts.map(el => el.name)
     );

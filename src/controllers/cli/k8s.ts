@@ -9,7 +9,7 @@ import {
   k8sPvCli,
   k8sSecretCli,
   k8sServiceCli,
-} from "./k8s-cil";
+} from "./k8s-cil/index.js";
 
 export function k8sCli(): Command {
   // DEPLOY
