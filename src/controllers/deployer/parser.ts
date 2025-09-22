@@ -352,7 +352,7 @@ export async function getLocalChartsValues(
 export function getEnvironments(type = ".json"): string[] {
   // Get the files in the directory and filter out the default environment
   let files = system.getFilesInDir("./assets/environment").filter(el => el.includes(type));
-  const exludedEnvironments = getSettings().EXLUDE_ENVIRONMENTS;
+  const exludedEnvironments = getSettings().EXCLUDE_ENVIRONMENTS;
   if (exludedEnvironments?.length ?? 0 > 0) {
     files = files.filter((el: string) => !exludedEnvironments.includes(el));
   }

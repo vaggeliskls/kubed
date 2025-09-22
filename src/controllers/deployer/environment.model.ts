@@ -20,7 +20,7 @@ export class SettingFile {
   NAMESPACE = "";
   STATE: StateEnum = StateEnum.Off;
   DEFAULT_TEMPLATE_PATH?: string = "./assets/charts/values";
-  EXLUDE_ENVIRONMENTS: string[] = ["default.json"];
+  EXCLUDE_ENVIRONMENTS: string[] = ["default.json"];
   PACKAGES = {
     KUBECTL: "v1.29.1",
     HELM: "v3.14.0",
