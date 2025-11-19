@@ -119,7 +119,12 @@ export async function getDeployerValues(
       localConfigMapValues = remoteConfigMapValues;
       const dynamicValues = await parser.getLocalConfigMapDict(envData, {
         filterByProperty: ["value"],
-        exclude: system.uniqueArrayValues(exclude, parser.getKeysListByProp(envData, "lock")),
+        exclude: system.uniqueArrayValues(
+          exclude,
+          parser
+            .getKeysListByProp(envData, "lock")
+            .filter(key => !Object.keys(remoteConfigMapValues).includes(key))
+        ),
       });
       localConfigMapValues = Object.assign({}, localConfigMapValues, dynamicValues);
       // We want to keep prompt and random types untouched while update the dynamic config and secret with static values
@@ -167,7 +172,12 @@ export async function getDeployerValues(
       localSecretValues = remoteSecretValues;
       const dynamicValues = await parser.getLocalSecretDict(envData, {
         filterByProperty: ["value"],
-        exclude: system.uniqueArrayValues(exclude, parser.getKeysListByProp(envData, "lock")),
+        exclude: system.uniqueArrayValues(
+          exclude,
+          parser
+            .getKeysListByProp(envData, "lock")
+            .filter(key => !Object.keys(remoteSecretValues).includes(key))
+        ),
       });
       localSecretValues = Object.assign({}, localSecretValues, dynamicValues);
       // We want to keep prompt and random types untouched while update the config and secret with static values
