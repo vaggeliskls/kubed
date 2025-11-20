@@ -123,7 +123,7 @@ export async function getDeployerValues(
           exclude,
           parser
             .getKeysListByProp(envData, "lock")
-            .filter(key => !Object.keys(remoteConfigMapValues).includes(key))
+            .filter(key => Object.keys(remoteConfigMapValues).includes(key))
         ),
       });
       localConfigMapValues = Object.assign({}, localConfigMapValues, dynamicValues);
@@ -176,7 +176,7 @@ export async function getDeployerValues(
           exclude,
           parser
             .getKeysListByProp(envData, "lock")
-            .filter(key => !Object.keys(remoteSecretValues).includes(key))
+            .filter(key => Object.keys(remoteSecretValues).includes(key))
         ),
       });
       localSecretValues = Object.assign({}, localSecretValues, dynamicValues);
