@@ -73,23 +73,23 @@ export function mergeEnvironments(defaultEnv: IDeployer, selectedEnv: IDeployer)
   mergedEnvData.Secret.name = selectedEnv.Secret?.name ?? defaultEnv.Secret?.name;
   // Override the default data with the selected environment's ConfigMap data
   mergedEnvData.ConfigMap.data = mergeArrayObjectByKey(
-    defaultEnv.ConfigMap.data,
-    selectedEnv.ConfigMap.data
+    defaultEnv.ConfigMap?.data ?? [],
+    selectedEnv.ConfigMap?.data ?? []
   ) as IData[];
   // Override the default data with the selected environment's Secret data
   mergedEnvData.Secret.data = mergeArrayObjectByKey(
-    defaultEnv.Secret.data,
-    selectedEnv.Secret.data
+    defaultEnv.Secret?.data ?? [],
+    selectedEnv.Secret?.data ?? []
   ) as IData[];
   // Override the default Settings with the selected environment's Settings
   mergedEnvData.Settings = mergeArrayObjectByKey(
-    defaultEnv.Settings,
-    selectedEnv.Settings
+    defaultEnv.Settings ?? [],
+    selectedEnv.Settings ?? []
   ) as IData[];
   // Override the Charts data with the selected environment's Charts data
   mergedEnvData.Charts.data = mergeArrayObjectByKey(
-    defaultEnv.Charts.data,
-    selectedEnv.Charts.data,
+    defaultEnv.Charts?.data ?? [],
+    selectedEnv.Charts?.data ?? [],
     "name"
   ) as IChartsData[];
   // Return the merged environment
