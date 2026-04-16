@@ -24,7 +24,7 @@ export class SettingFile {
   PACKAGES = {
     KUBECTL: "v1.29.1",
     HELM: "v3.14.0",
-    SKOPEO: "v1.14.0",
+    SKOPEO: "1.22.0",
     K3D: "v5.6.0",
   };
   ARGS = {
