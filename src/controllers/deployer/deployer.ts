@@ -286,11 +286,10 @@ export function preparePackagedFiles(
     return;
   }
   for (const asset of assets) {
-    if (
-      !system.pathExists(`./assets/${asset}`) &&
-      system.pathExists(`${system.packagedPwd()}/assets/${asset}`)
-    ) {
-      system.copyPaste(`${system.packagedPwd()}/assets/${asset}`, `./assets/${asset}`);
+    const src = `${system.packagedPwd()}/assets/${asset}`;
+    const dest = `./assets/${asset}`;
+    if (!system.pathExists(dest) && system.pathExists(src)) {
+      system.copyFromSnapshot(src, dest);
     }
   }
 }

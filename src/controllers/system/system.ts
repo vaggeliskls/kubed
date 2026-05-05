@@ -359,6 +359,31 @@ export function copyPaste(
 }
 
 /**
+ * Recursively copies a file or directory using only `readFileSync` /
+ * `writeFileSync`. Unlike `fs-extra.copySync`, this avoids `fs.copyFileSync`,
+ * which pkg/yao-pkg cannot virtualize for files that live inside the snapshot
+ * filesystem (`/snapshot/...` or `C:\snapshot\...`). Use this when the source
+ * may be a snapshot path.
+ */
+export function copyFromSnapshot(source: string, target: string): void {
+  const stat = fs.statSync(source);
+  if (stat.isDirectory()) {
+    fs.mkdirSync(target, { recursive: true });
+    for (const entry of fs.readdirSync(source)) {
+      copyFromSnapshot(path.join(source, entry), path.join(target, entry));
+    }
+    return;
+  }
+  fs.mkdirSync(path.dirname(target), { recursive: true });
+  fs.writeFileSync(target, fs.readFileSync(source));
+  try {
+    fs.chmodSync(target, stat.mode);
+  } catch {
+    /* mode may not be representable on the target FS (e.g. Windows) — ignore */
+  }
+}
+
+/**
  * Downloads a file from the specified URL and saves it to the target path.
  *
  * @param url - The URL of the file to download.
